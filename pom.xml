@@ -3,7 +3,7 @@
   
   <modelVersion>4.0.0</modelVersion>
   
-  <groupId>eu.stratuslab.one</groupId>
+  <groupId>eu.stratuslab.pkgs</groupId>
   <artifactId>one</artifactId>
   
   <packaging>pom</packaging>
