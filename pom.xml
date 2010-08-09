@@ -78,9 +78,7 @@
 	    <configuration>
 	      <targetDirectory>${project.build.directory}/checkout</targetDirectory>
 	      <strip>1</strip>
-	      <patches>
-		<patch>one-add-newlines.patch</patch>
-	      </patches>
+	      <naturalOrderProcessing>true</naturalOrderProcessing>
 	    </configuration>
 	  </execution>
 	</executions>
