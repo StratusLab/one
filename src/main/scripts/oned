@@ -1,0 +1,61 @@
+#!/bin/bash
+#
+# oned -- OpenNebula Daemon
+#
+# chkconfig: 2345 80 30
+# description: OpenNebula is a Virtual Infrastructure Manaager
+# processname: oned
+# config: /srv/cloud/one/etc/oned.conf
+#
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+ONE_LOCATION=/srv/cloud/one
+export ONE_LOCATION
+
+[ -x ${ONE_LOCATION}/bin/oned ] || exit 0
+
+RETVAL=0
+prog="oned"
+
+start() {
+	# Start the OpenNebula daemon
+	echo -n $"Starting OpenNebula (${prog}): "
+	${ONE_LOCATION}/bin/one start 2>/dev/null 1>&2 && success || failure $"$prog start"
+	RETVAL=$?
+        echo
+	return $RETVAL
+}
+
+stop() {
+        # Stop the OpenNebula daemon
+	echo -n $"Shutting down OpenNebula (${prog}): "
+	${ONE_LOCATION}/bin/one stop 2>/dev/null 1>&2 && success || failure $"$prog stop"
+	RETVAL=$?
+	echo
+	return $RETVAL
+}
+
+restart() {
+	stop
+	start
+}
+
+# See how we were called.
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  restart)
+	restart
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|restart}"
+	exit 1
+esac
+
+exit $?

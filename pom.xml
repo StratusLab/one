@@ -171,7 +171,7 @@ fi
  	  <mappings>
 
 	    <mapping>
-	      <directory>/usr/bin</directory>
+	      <directory>${one.install.root}/bin</directory>
 	      <filemode>755</filemode>
 	      <username>root</username>
 	      <groupname>root</groupname>
@@ -186,7 +186,22 @@ fi
 	    </mapping>
 
 	    <mapping>
-	      <directory>/etc</directory>
+	      <directory>/etc/init.d/</directory>
+	      <filemode>755</filemode>
+	      <username>root</username>
+	      <groupname>root</groupname>
+	      <sources>
+		<source>
+		  <location>src/main/scripts</location>
+		  <includes>
+		    <include>oned</include>
+		  </includes>
+		</source>
+	      </sources>
+	    </mapping>
+
+	    <mapping>
+	      <directory>${one.install.root}/etc</directory>
 	      <filemode>655</filemode>
 	      <username>root</username>
 	      <groupname>root</groupname>
@@ -202,7 +217,7 @@ fi
 	    </mapping>
 
 	    <mapping>
-	      <directory>/usr/lib</directory>
+	      <directory>${one.install.root}/lib</directory>
 	      <filemode>755</filemode>
 	      <username>root</username>
 	      <groupname>root</groupname>
@@ -217,7 +232,7 @@ fi
 	    </mapping>
 
 	    <mapping>
-	      <directory>/usr/share/doc/opennebula</directory>
+	      <directory>${one.install.root}/share</directory>
 	      <filemode>644</filemode>
 	      <username>root</username>
 	      <groupname>root</groupname>
@@ -233,7 +248,7 @@ fi
 	    </mapping>
 
 	    <mapping>
-	      <directory>/var/one</directory>
+	      <directory>${one.install.root}/var</directory>
 	      <filemode>644</filemode>
 	      <username>oneadmin</username>
 	      <groupname>cloud</groupname>
@@ -255,5 +270,9 @@ fi
 
     </plugins>
   </build>
+
+  <properties>
+    <one.install.root>/srv/cloud/one</one.install.root>
+  </properties>
 
 </project>
