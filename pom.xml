@@ -7,13 +7,40 @@
   <artifactId>one</artifactId>
   
   <packaging>pom</packaging>
-  <version>1.0-SNAPSHOT</version>
+  <version>2.0-StratusLab-SNAPSHOT</version>
   <name>OpenNebula</name>
   <url>http://stratuslab.eu</url>
+
   <scm>
     <connection>scm:git:git://opennebula.org/one.git</connection>
     <developerConnection>scm:git:git://opennebula.org/one.git</developerConnection>
   </scm>
+
+  <profiles>
+    <profile>
+      <activation>
+	<file>
+	  <exists>/bin/rpm</exists>
+	</file>
+      </activation>
+      <build>
+	<plugins>
+	  <plugin>
+	    <groupId>org.codehaus.mojo</groupId>
+	    <artifactId>rpm-maven-plugin</artifactId>
+	    <executions>
+	      <execution>
+		<goals>
+		  <goal>attached-rpm</goal>
+		</goals>
+	      </execution>
+	    </executions>
+	  </plugin>
+	</plugins>
+      </build>
+    </profile>
+    
+  </profiles>
 
   <build>
     <plugins>
@@ -95,6 +122,138 @@
         </executions>
       </plugin>
 
+      <plugin>
+	<groupId>org.codehaus.mojo</groupId>
+	<artifactId>rpm-maven-plugin</artifactId>
+	<configuration>
+	  <summary>OpenNebula</summary>
+	  <name>one</name>
+	  <group>System</group>
+	  <packager>StratusLab</packager>
+	  <copyright>Apache</copyright>
+	  <url>http://opennebula.org/</url>
+	  <provides>
+	    <provide>opennebula</provide>
+	    <provide>one</provide>
+	  </provides>
+	  <requires>
+	    <require>openssl</require>
+	    <require>xmlrpc-c</require>
+	    <require>ruby</require>
+	    <require>sqlite &gt; 3.7</require>
+	  </requires>
+	  <needarch>x86_64</needarch>
+	  <description>
+OpenNebula is a Virtual Infrastructure Manager that orchestrates storage,
+network and virtualization technologies to enable the dynamic placement of
+multi-tier services (groups of interconnected virtual machines) on distributed
+infrastructures, combining both data center resources and remote cloud
+resources, according to allocation policies. OpenNebula provides internal and
+Cloud administration and user interfaces for the full management of the Cloud
+platform.
+
+OpenNebula is free software released under the Apache License.
+	  </description>
+	  <preinstallScriptlet>
+	    <script>
+mkdir -p %{installroot}
+/usr/sbin/groupadd -f cloud
+if ! grep -q oneadmin /etc/passwd
+then
+        /usr/sbin/useradd -d %{installroot} -g cloud -s /bin/bash oneadmin 2> /dev/null
+fi
+	    </script>
+	  </preinstallScriptlet>
+	  <postinstallScriptlet>
+	    <script>/sbin/ldconfig</script>
+	  </postinstallScriptlet>
+	  <postremoveScriptlet>
+	    <script>/sbin/ldconfig</script>
+	  </postremoveScriptlet>
+ 	  <mappings>
+
+	    <mapping>
+	      <directory>/usr/bin</directory>
+	      <filemode>755</filemode>
+	      <username>root</username>
+	      <groupname>root</groupname>
+	      <sources>
+		<source>
+		  <location>target/one-install/bin</location>
+		  <includes>
+		    <include>**/*</include>
+		  </includes>
+		</source>
+	      </sources>
+	    </mapping>
+
+	    <mapping>
+	      <directory>/etc</directory>
+	      <filemode>655</filemode>
+	      <username>root</username>
+	      <groupname>root</groupname>
+	      <configuration>true</configuration>
+	      <sources>
+		<source>
+		  <location>target/one-install/etc</location>
+		  <includes>
+		    <include>**/*</include>
+		  </includes>
+		</source>
+	      </sources>
+	    </mapping>
+
+	    <mapping>
+	      <directory>/usr/lib</directory>
+	      <filemode>755</filemode>
+	      <username>root</username>
+	      <groupname>root</groupname>
+	      <sources>
+		<source>
+		  <location>target/one-install/lib</location>
+		  <includes>
+		    <include>**/*</include>
+		  </includes>
+		</source>
+	      </sources>
+	    </mapping>
+
+	    <mapping>
+	      <directory>/usr/share/doc/opennebula</directory>
+	      <filemode>644</filemode>
+	      <username>root</username>
+	      <groupname>root</groupname>
+	      <documentation>true</documentation>
+	      <sources>
+		<source>
+		  <location>target/one-install/share</location>
+		  <includes>
+		    <include>**/*</include>
+		  </includes>
+		</source>
+	      </sources>
+	    </mapping>
+
+	    <mapping>
+	      <directory>/var/one</directory>
+	      <filemode>644</filemode>
+	      <username>oneadmin</username>
+	      <groupname>cloud</groupname>
+	      <directoryIncluded>true</directoryIncluded>
+	      <recurseDirectories>true</recurseDirectories>
+	      <sources>
+		<source>
+		  <location>target/one-install/var</location>
+		  <includes>
+		    <include>**/*</include>
+		  </includes>
+		</source>
+	      </sources>
+	    </mapping>
+
+	  </mappings>
+	</configuration>
+      </plugin>
 
     </plugins>
   </build>
