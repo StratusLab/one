@@ -6,8 +6,8 @@
   <groupId>eu.stratuslab.pkgs</groupId>
   <artifactId>one</artifactId>
   
-  <packaging>pom</packaging>
-  <version>2.0-StratusLab.0.SNAPSHOT</version>
+  <packaging>rpm</packaging>
+  <version>2.0-SNAPSHOT</version>
   <name>OpenNebula</name>
   <url>http://stratuslab.eu</url>
 
@@ -28,10 +28,11 @@
 	  <plugin>
 	    <groupId>org.codehaus.mojo</groupId>
 	    <artifactId>rpm-maven-plugin</artifactId>
+	    <extensions>true</extensions>
 	    <executions>
 	      <execution>
 		<goals>
-		  <goal>attached-rpm</goal>
+		  <goal>rpm</goal>
 		</goals>
 	      </execution>
 	    </executions>
@@ -125,10 +126,11 @@
 	<groupId>org.codehaus.mojo</groupId>
 	<artifactId>rpm-maven-plugin</artifactId>
 	<configuration>
+	  <release>${RELEASE}</release>
 	  <summary>OpenNebula</summary>
 	  <name>one</name>
 	  <group>System</group>
-	  <organization>StratusLab</organization>
+	  <vendor>StratusLab</vendor>
 	  <packager>StratusLab</packager>
 	  <copyright>Apache</copyright>
 	  <url>http://opennebula.org/</url>
@@ -274,6 +276,8 @@ fi
   </build>
 
   <properties>
+    <maven.build.timestamp.format>yyyyMMdd.HHmmss</maven.build.timestamp.format>
+    <RELEASE>StratusLab.0.${maven.build.timestamp}</RELEASE>
     <one.install.root>/srv/cloud/one</one.install.root>
   </properties>
 
