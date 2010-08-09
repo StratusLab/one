@@ -85,6 +85,10 @@
 	    <configuration>
 	      <executable>${project.build.directory}/checkout/install.sh</executable>
 	      <workingDirectory>${project.build.directory}/checkout</workingDirectory>
+	      <arguments>
+	        <argument>-d</argument>
+	        <argument>${project.build.directory}/one-install</argument>
+	      </arguments>
 	    </configuration>
           </execution>
 
