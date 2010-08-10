@@ -170,6 +170,26 @@ if ! grep -q oneadmin /etc/passwd
 then
         /usr/sbin/useradd -d %{installroot} -g cloud -s /bin/bash oneadmin 2> /dev/null
 fi
+
+authdir=%{installroot}/.one
+file=${authdir}/one_auth
+
+mkdir -p ${authdir}
+
+if [ ! -e ${file} ]; then
+  password=`base64 &lt; /dev/urandom | tr -d '+/\r\n0-9' | head -c 8`
+  echo "oneadmin:${password}" > ${file}
+fi
+
+if [ -e ${authdir} ]; then
+  chown oneadmin:cloud ${authdir}
+  chmod 0700 ${authdir}
+fi
+
+if [ -e ${file} ]; then
+  chown oneadmin:cloud ${file}
+  chmod 0600 ${file}
+fi
 	    </script>
 	  </preinstallScriptlet>
 	  <postinstallScriptlet>
