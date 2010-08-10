@@ -181,6 +181,20 @@ fi
  	  <mappings>
 
 	    <mapping>
+	      <directory>/var/one/images</directory>
+	      <filemode>755</filemode>
+	      <username>oneadmin</username>
+	      <groupname>cloud</groupname>
+	    </mapping>
+
+	    <mapping>
+	      <directory>/var/one/vms</directory>
+	      <filemode>755</filemode>
+	      <username>oneadmin</username>
+	      <groupname>cloud</groupname>
+	    </mapping>
+
+	    <mapping>
 	      <directory>${one.install.root}/bin</directory>
 	      <filemode>755</filemode>
 	      <username>root</username>
@@ -200,6 +214,7 @@ fi
 	      <filemode>755</filemode>
 	      <username>root</username>
 	      <groupname>root</groupname>
+	      <directoryIncluded>false</directoryIncluded>
 	      <sources>
 		<source>
 		  <location>src/main/scripts</location>
