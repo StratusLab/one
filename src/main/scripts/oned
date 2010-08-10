@@ -18,11 +18,13 @@ export ONE_LOCATION
 
 RETVAL=0
 prog="oned"
+one_user="oneadmin"
 
 start() {
 	# Start the OpenNebula daemon
 	echo -n $"Starting OpenNebula (${prog}): "
-	${ONE_LOCATION}/bin/one start 2>/dev/null 1>&2 && success || failure $"$prog start"
+	cmd="export ONE_LOCATION=${ONE_LOCATION}; ${ONE_LOCATION}/bin/one start"
+	su - ${one_user} -c "${cmd}" 2>/dev/null 1>&2 && success || failure $"$prog start"
 	RETVAL=$?
         echo
 	return $RETVAL
@@ -31,7 +33,8 @@ start() {
 stop() {
         # Stop the OpenNebula daemon
 	echo -n $"Shutting down OpenNebula (${prog}): "
-	${ONE_LOCATION}/bin/one stop 2>/dev/null 1>&2 && success || failure $"$prog stop"
+	cmd="export ONE_LOCATION=${ONE_LOCATION}; ${ONE_LOCATION}/bin/one stop"
+	su - ${one_user} -c "${cmd}" 2>/dev/null 1>&2 && success || failure $"$prog start"
 	RETVAL=$?
 	echo
 	return $RETVAL
