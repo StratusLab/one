@@ -170,10 +170,10 @@ OpenNebula is free software released under the Apache License.
 	  </description>
 	  <preinstallScriptlet>
 	    <script>
-/usr/sbin/groupadd -f cloud
+/usr/sbin/groupadd -g 9000 -f cloud
 if ! grep -q ^oneadmin /etc/passwd
 then
-  /usr/sbin/useradd -g cloud -s /bin/bash oneadmin 2&gt;/dev/null
+  /usr/sbin/useradd -uid 9000 -g cloud -s /bin/bash oneadmin 2&gt;/dev/null
 fi
 
 authdir=~oneadmin/.one
