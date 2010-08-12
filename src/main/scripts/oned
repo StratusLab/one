@@ -11,38 +11,41 @@
 # Source function library.
 . /etc/rc.d/init.d/functions
 
-ONE_LOCATION=/srv/cloud/one
-export ONE_LOCATION
-
-[ -x ${ONE_LOCATION}/bin/oned ] || exit 0
-
 RETVAL=0
 prog="oned"
+daemonexe="/usr/bin/oned"
+ctrlexe="/usr/bin/one"
 one_user="oneadmin"
 
+[ -x ${ctrlexe} ] || exit 0
+[ -x ${daemonexe} ] || exit 0
+
 start() {
-	# Start the OpenNebula daemon
-	echo -n $"Starting OpenNebula (${prog}): "
-	cmd="export ONE_LOCATION=${ONE_LOCATION}; ${ONE_LOCATION}/bin/one start"
-	su - ${one_user} -c "${cmd}" 2>/dev/null 1>&2 && success || failure $"$prog start"
-	RETVAL=$?
-        echo
-	return $RETVAL
+  # Start the OpenNebula daemon
+  echo -n $"Starting OpenNebula (${prog}): "
+  su - ${one_user} -c "${ctrlexe} start" 2>/dev/null 1>&2 && success || failure $"$prog start"
+  RETVAL=$?
+  echo
+  return $RETVAL
 }
 
 stop() {
-        # Stop the OpenNebula daemon
-	echo -n $"Shutting down OpenNebula (${prog}): "
-	cmd="export ONE_LOCATION=${ONE_LOCATION}; ${ONE_LOCATION}/bin/one stop"
-	su - ${one_user} -c "${cmd}" 2>/dev/null 1>&2 && success || failure $"$prog start"
-	RETVAL=$?
-	echo
-	return $RETVAL
+  # Stop the OpenNebula daemon
+  echo -n $"Shutting down OpenNebula (${prog}): "
+  su - ${one_user} -c "${ctrlexe} stop" 2>/dev/null 1>&2 && success || failure $"$prog start"
+  RETVAL=$?
+  echo
+  return $RETVAL
 }
 
 restart() {
-	stop
-	start
+  stop
+  start
+}
+
+mystatus() {
+  status -p /var/run/one/oned oned
+  status -p /var/run/one/mm_sched mm_sched
 }
 
 # See how we were called.
@@ -56,8 +59,11 @@ case "$1" in
   restart)
 	restart
 	;;
+  status)
+        mystatus
+        ;;
   *)
-	echo $"Usage: $0 {start|stop|restart}"
+	echo $"Usage: $0 {start|stop|restart|status}"
 	exit 1
 esac
 
