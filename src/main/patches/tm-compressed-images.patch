@@ -1,16 +1,3 @@
-diff --git a/src/vmm/LibVirtDriver.cc b/src/vmm/LibVirtDriver.cc
-index c55468d..e579e10 100644
---- a/src/vmm/LibVirtDriver.cc
-+++ b/src/vmm/LibVirtDriver.cc
-@@ -143,7 +143,7 @@ int LibVirtDriver::deployment_description(
- 
-     if (emulator == "kvm")
-     {
--        file << "\t\t<type>hvm</type>" << endl;
-+        file << "\t\t<type machine='pc'>hvm</type>" << endl;
-     }
- 
-     num = vm->get_template_attribute("OS",attrs);
 diff --git a/src/tm_mad/tm_common.sh b/src/tm_mad/tm_common.sh
 index 0f589fe..1e98122 100644
 --- a/src/tm_mad/tm_common.sh
