@@ -34,14 +34,6 @@
 	  <plugin>
 	    <groupId>org.codehaus.mojo</groupId>
 	    <artifactId>rpm-maven-plugin</artifactId>
-	    <extensions>true</extensions>
-	    <executions>
-	      <execution>
-		<goals>
-		  <goal>rpm</goal>
-		</goals>
-	      </execution>
-	    </executions>
 	  </plugin>
 	</plugins>
       </build>
@@ -121,12 +113,6 @@
 	      <environmentVariables>
 		<DESTDIR>${project.build.directory}/one-install</DESTDIR>
 	      </environmentVariables>
-<!--
-	      <arguments>
-	        <argument>-d</argument>
-	        <argument>${project.build.directory}/one-install</argument>
-	      </arguments>
--->
 	    </configuration>
           </execution>
 
@@ -136,6 +122,7 @@
       <plugin>
 	<groupId>org.codehaus.mojo</groupId>
 	<artifactId>rpm-maven-plugin</artifactId>
+	<extensions>true</extensions>
 	<configuration>
 	  <release>${RELEASE}</release>
 	  <summary>OpenNebula</summary>
