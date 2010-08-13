@@ -44,8 +44,8 @@ restart() {
 }
 
 mystatus() {
-  status -p /var/run/one/oned oned
-  status -p /var/run/one/mm_sched mm_sched
+  status -p /var/run/one/oned.pid oned
+  status -p /var/run/one/sched.pid mm_sched
 }
 
 # See how we were called.
