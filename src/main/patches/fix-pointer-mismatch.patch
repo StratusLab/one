@@ -11,16 +11,3 @@ index 9335054..0e734b2 100644
       *    @returns string for logging
       */
      static string action_error (const string& method,
-diff --git a/src/rm/RequestManagerImagePersistent.cc b/src/rm/RequestManagerImagePersistent.cc
-index 95d3075..1a52510 100644
---- a/src/rm/RequestManagerImagePersistent.cc
-+++ b/src/rm/RequestManagerImagePersistent.cc
-@@ -137,7 +137,7 @@ error_authorize:
- 
- error_persistent:
-     image->unlock();
--    oss << action_error(method_name, "MANAGE", "IMAGE", iid, NULL)
-+    oss << action_error(method_name, "MANAGE", "IMAGE", iid, 0)
-         << " Is the image public? An Image cannot be public and persistent.";
-     goto error_common;
- 
