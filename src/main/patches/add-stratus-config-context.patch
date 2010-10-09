@@ -1,0 +1,28 @@
+diff --git a/src/tm_mad/nfs/tm_context.sh b/src/tm_mad/nfs/tm_context.sh
+index b6c515d..842c919 100755
+--- a/src/tm_mad/nfs/tm_context.sh
++++ b/src/tm_mad/nfs/tm_context.sh
+@@ -48,6 +48,9 @@ ISO_DIR=$DST_DIR/isofiles
+ 
+ exec_and_log "mkdir -p $ISO_DIR"
+ 
++# Add StratusLab init script
++SRC="$SRC /var/share/stratuslab/context/init.sh"
++
+ for f in $SRC; do
+     case $f in
+     http://*)
+diff --git a/src/tm_mad/ssh/tm_context.sh b/src/tm_mad/ssh/tm_context.sh
+index b420be3..67cc089 100755
+--- a/src/tm_mad/ssh/tm_context.sh
++++ b/src/tm_mad/ssh/tm_context.sh
+@@ -48,6 +48,9 @@ ISO_DIR="$TMP_DIR/isofiles"
+ 
+ exec_and_log "mkdir -p $ISO_DIR"
+ 
++# Add StratusLab init script
++SRC="$SRC /var/share/stratuslab/context/init.sh"
++
+ for f in $SRC; do
+     case $f in
+     http://*)
