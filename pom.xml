@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   
   <groupId>eu.stratuslab.pkgs</groupId>
-  <artifactId>one_2.0_StratusLab</artifactId>
+  <artifactId>one-2.0-StratusLab</artifactId>
   
   <packaging>rpm</packaging>
   <version>0.1.0-SNAPSHOT</version>
@@ -19,7 +19,6 @@
   
   <scm>
     <connection>scm:git:git://opennebula.org/one.git</connection>
-    <developerConnection>scm:git:git://opennebula.org/one.git</developerConnection>
   </scm>
 
   <profiles>
@@ -154,6 +153,9 @@ Cloud administration and user interfaces for the full management of the Cloud
 platform.
 
 OpenNebula is free software released under the Apache License.
+
+Note: This is the StratusLab distribution of OpenNebula which may differ
+from the version released directly by the OpenNebula project. 
 	  </description>
 	  <preinstallScriptlet>
 	    <script>
@@ -347,7 +349,7 @@ fi
 
   <properties>
     <maven.build.timestamp.format>yyyyMMdd.HHmmss</maven.build.timestamp.format>
-    <RELEASE>StratusLab.0.${maven.build.timestamp}</RELEASE>
+    <RELEASE>0.${maven.build.timestamp}</RELEASE>
   </properties>
 
 </project>
