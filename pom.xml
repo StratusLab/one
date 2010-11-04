@@ -348,7 +348,6 @@ fi
   <properties>
     <maven.build.timestamp.format>yyyyMMdd.HHmmss</maven.build.timestamp.format>
     <RELEASE>StratusLab.0.${maven.build.timestamp}</RELEASE>
-    <one.install.root>/srv/cloud/one</one.install.root>
   </properties>
 
 </project>
