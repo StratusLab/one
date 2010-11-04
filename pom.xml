@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   
   <groupId>eu.stratuslab.pkgs</groupId>
-  <artifactId>one-2.0-StratusLab</artifactId>
+  <artifactId>one_2.0_StratusLab</artifactId>
   
   <packaging>rpm</packaging>
   <version>0.1.0-SNAPSHOT</version>
