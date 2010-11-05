@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   
   <groupId>eu.stratuslab.pkgs</groupId>
-  <artifactId>one_2.0_StratusLab</artifactId>
+  <artifactId>one-2.0-StratusLab</artifactId>
   
   <packaging>rpm</packaging>
   <version>0.1.0-SNAPSHOT</version>
@@ -125,7 +125,7 @@
 	<configuration>
 	  <release>${RELEASE}</release>
 	  <summary>OpenNebula</summary>
-	  <name>one</name>
+	  <name>${artifactId}</name>
 	  <group>System</group>
 	  <vendor>StratusLab</vendor>
 	  <packager>StratusLab</packager>
