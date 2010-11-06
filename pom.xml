@@ -12,8 +12,8 @@
 
 
   <scm>
-    <connection>scm:git:ssh://git@code.stratuslab.eu/ext/git/stratuslab-one.pkgs.git</connection>
-    <developerConnection>scm:git:ssh://git@code.stratuslab.eu/ext/git/stratuslab-one.git</developerConnection>
+    <connection>scm:git:ssh://apache@code.stratuslab.eu/ext/git/stratuslab-one.pkgs.git</connection>
+    <developerConnection>scm:git:ssh://apache@code.stratuslab.eu/ext/git/stratuslab-one.git</developerConnection>
   </scm>
 
   <distributionManagement>
