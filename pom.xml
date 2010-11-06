@@ -13,8 +13,8 @@
 
 
   <scm>
-    <connection>scm:git:git+ssh://code.stratuslab.eu/ext/git/stratuslab-one.pkgs.git</connection>
-    <developerConnection>scm:git:git+ssh://code.stratuslab.eu/ext/git/stratuslab-one.git</developerConnection>
+    <connection>scm:git:ssh://code.stratuslab.eu/ext/git/stratuslab-one.pkgs.git</connection>
+    <developerConnection>scm:git:ssh://code.stratuslab.eu/ext/git/stratuslab-one.git</developerConnection>
   </scm>
 
   <distributionManagement>
