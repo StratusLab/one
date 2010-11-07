@@ -30,25 +30,6 @@
     </snapshotRepository>
   </distributionManagement>
 
-  <profiles>
-    <profile>
-      <activation>
-	<file>
-	  <exists>/bin/rpm</exists>
-	</file>
-      </activation>
-      <build>
-	<plugins>
-	  <plugin>
-	    <groupId>org.codehaus.mojo</groupId>
-	    <artifactId>rpm-maven-plugin</artifactId>
-	  </plugin>
-	</plugins>
-      </build>
-    </profile>
-    
-  </profiles>
-
   <build>
 
     <pluginManagement>
