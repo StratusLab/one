@@ -2,12 +2,6 @@ diff --git a/src/tm_mad/ssh/tm_context.sh b/src/tm_mad/ssh/tm_context.sh
 index b420be3..e74b97b 100755
 --- a/src/tm_mad/ssh/tm_context.sh
 +++ b/src/tm_mad/ssh/tm_context.sh
-@@ -1,4 +1,4 @@
--#!/bin/bash
-+#!/bin/bash -x
- 
- # -------------------------------------------------------------------------- #
- # Copyright 2002-2010, OpenNebula Project Leads (OpenNebula.org)             #
 @@ -42,9 +42,14 @@ DST_PATH=`arg_path $DST`
  DST_DIR=`dirname $DST_PATH`
  DST_FILE=`basename $DST_PATH`
