@@ -1,0 +1,4 @@
+# remove files regularly from the quarantine area
+#
+
+*/15 * * * * root (date --iso-8601=seconds --utc; /usr/sbin/one-quarantine-cleanup.sh) >>/var/log/one/one-quarantine-cleanup.log 2>&1

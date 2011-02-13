@@ -1,0 +1,4 @@
+/var/log/one/one-quarantine-cleanup.log {
+	weekly
+	missingok
+}
