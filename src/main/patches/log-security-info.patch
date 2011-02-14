@@ -1,0 +1,108 @@
+diff --git a/include/VirtualMachine.h b/include/VirtualMachine.h
+index 1f9d0da..ae5580e 100644
+--- a/include/VirtualMachine.h
++++ b/include/VirtualMachine.h
+@@ -721,6 +721,12 @@ public:
+     // Network Leases & Disk Images
+     // ------------------------------------------------------------------------
+     /**
++     *  Log the network releases for this image.
++     *  @return 0 if success
++     */
++    int log_network_leases();
++
++    /**
+      *  Get all network leases for this Virtual Machine
+      *  @return 0 if success
+      */
+diff --git a/src/dm/DispatchManagerActions.cc b/src/dm/DispatchManagerActions.cc
+index a82485f..b8e7459 100644
+--- a/src/dm/DispatchManagerActions.cc
++++ b/src/dm/DispatchManagerActions.cc
+@@ -47,7 +47,24 @@ int DispatchManager::deploy (
+ 
+         vmpool->update(vm);
+ 
+-        vm->log("DiM", Log::INFO, "New VM state is ACTIVE.");
++	/* Generate log message containing vid, uid, and username. */
++	ostringstream log_msg;
++	int vm_user_id = vm->get_uid();
++	string username = "";
++
++	UserPool* upool = nd.get_upool();
++	User* user = upool->get(vm_user_id, false);
++	if (user != NULL) {
++	  username = user->get_username();
++	}
++
++	log_msg << "New VM state is ACTIVE (" << vid 
++		<< ", " << vm_user_id << ", " 
++		<< username << ")";
++
++        vm->log("DiM", Log::INFO, log_msg);
++
++	vm->log_network_leases();
+ 
+         lcm->trigger(LifeCycleManager::DEPLOY,vid);
+     }
+diff --git a/src/vm/VirtualMachine.cc b/src/vm/VirtualMachine.cc
+index 6e0d37e..08eb55f 100644
+--- a/src/vm/VirtualMachine.cc
++++ b/src/vm/VirtualMachine.cc
+@@ -1014,6 +1014,40 @@ void VirtualMachine::release_disk_images()
+ /* -------------------------------------------------------------------------- */
+ /* -------------------------------------------------------------------------- */
+ 
++int VirtualMachine::log_network_leases()
++{
++    int                   num_nics;
++    vector<Attribute  * > nics;
++    VirtualNetworkPool *  vnpool;
++    VectorAttribute *     nic;
++
++    Nebula& nd = Nebula::instance();
++    vnpool     = nd.get_vnpool();
++
++    num_nics   = vm_template->get("NIC",nics);
++
++    for(int i=0; i<num_nics; i++)
++    {
++        nic = dynamic_cast<VectorAttribute * >(nics[i]);
++
++        if ( nic == 0 )
++        {
++            continue;
++        }
++
++	/* Log the acquisition of network lease. */
++	ostringstream log_msg;
++	log_msg << "acquired lease " 
++		<< "(IP=" << nic->vector_value("IP")
++		<< ", MAC=" << nic->vector_value("MAC")
++		<< ")";
++        log("VMM", Log::INFO, log_msg);
++	
++    }
++
++    return 0;
++}
++
+ int VirtualMachine::get_network_leases()
+ {
+     int                   num_nics, rc;
+@@ -1097,6 +1131,15 @@ void VirtualMachine::release_network_leases()
+ 
+         vn->release_lease(ip);
+         vn->unlock();
++
++	/* Log the release of network lease. */
++	ostringstream log_msg;
++	log_msg << "released lease " 
++		<< "(IP=" << nic->vector_value("IP")
++		<< ", MAC=" << nic->vector_value("MAC")
++		<< ")";
++        log("VMM", Log::INFO, log_msg);
++	
+     }
+ }
+ 
