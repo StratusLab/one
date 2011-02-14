@@ -413,6 +413,9 @@ fi
 		  <includes>
 		    <include>**/*</include>
 		  </includes>
+		  <excludes>
+		    <exclude>**/auth.conf</exclude>
+		  </excludes>
 		</source>
 	      </sources>
 	    </mapping>
