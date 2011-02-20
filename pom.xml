@@ -61,7 +61,7 @@ machine instances.
     </snapshotRepository>
     <site>
       <id>hudson.webserver</id>
-      <url>scp://hudson.stratuslab.eu/var/www/authn</url>
+      <url>scp://hudson.stratuslab.eu/var/www/one</url>
     </site>
   </distributionManagement>
 
