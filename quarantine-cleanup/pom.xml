@@ -5,7 +5,7 @@
   <groupId>eu.stratuslab.pkgs</groupId>
   <artifactId>quarantine-cleanup</artifactId>  
   <version>0.1.1-SNAPSHOT</version>
-  <name>Quarantine Cleanup</name>
+  <name>Quarantine Cleanup (POM)</name>
 
   <description>
 Cron and logrotate entries for the cleanup of the VM quarantine area.
@@ -19,35 +19,22 @@ Cron and logrotate entries for the cleanup of the VM quarantine area.
     <version>0.1.1-SNAPSHOT</version>
   </parent>
 
-  <properties>
-    <maven.build.timestamp.format>yyyyMMdd.HHmmss</maven.build.timestamp.format>
-    <RELEASE>0.${maven.build.timestamp}</RELEASE>
-  </properties>
+  <modules>
+    <module>tar</module>
+  </modules>
 
-  <build>
-
-    <plugins>
-
-      <plugin>
-	<groupId>org.apache.maven.plugins</groupId>
-	<artifactId>maven-assembly-plugin</artifactId>
-	<configuration>
-          <descriptors>
-            <descriptor>src/main/assembly/distribution.xml</descriptor>
-          </descriptors>
-	</configuration>
-	<executions>
-	  <execution>
-	    <id>make-assembly</id>
-	    <phase>package</phase>
-	    <goals>
-	      <goal>single</goal>
-	    </goals>
-	  </execution>
-	</executions>
-      </plugin>
-
-    </plugins>
-  </build>
+  <profiles>
+    <profile>
+      <id>rpm</id>
+      <activation>
+        <file>
+          <exists>/usr/bin/rpmbuild</exists>
+        </file>
+      </activation>
+      <modules>
+        <module>rpm</module>
+      </modules>
+    </profile>
+  </profiles>
 
 </project>

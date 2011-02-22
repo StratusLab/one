@@ -4,24 +4,47 @@
   <includeBaseDirectory>false</includeBaseDirectory>
   
   <formats>
-    <format>zip</format>
+    <format>tar.gz</format>
   </formats>
   
   <fileSets>
+
     <fileSet>
       <directory>src/main/scripts</directory>
       <outputDirectory>etc/cron.d</outputDirectory>
+      <fileMode>755</fileMode>
       <includes>
 	<include>*.cron</include>
       </includes>
     </fileSet>
+
     <fileSet>
       <directory>src/main/scripts</directory>
       <outputDirectory>etc/logrotate.d</outputDirectory>
+      <fileMode>755</fileMode>
       <includes>
 	<include>*.logrotate</include>
       </includes>
     </fileSet>
+
+    <fileSet>
+      <directory>src/main/scripts</directory>
+      <outputDirectory>etc/stratuslab</outputDirectory>
+      <fileMode>644</fileMode>
+      <includes>
+	<include>*.cfg</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>src/main/scripts</directory>
+      <outputDirectory>bin</outputDirectory>
+      <fileMode>755</fileMode>
+      <includes>
+	<include>*.sh</include>
+      </includes>
+    </fileSet>
+
   </fileSets>
   
 </assembly>
