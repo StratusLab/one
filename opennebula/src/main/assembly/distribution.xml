@@ -1,0 +1,197 @@
+<assembly>
+  <id>distribution</id>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+  
+  <formats>
+    <format>zip</format>
+  </formats>
+  
+  <fileSets>
+
+    <fileset>
+      <directory>/var/lock/one</directory>
+      <directoryMode>755</directoryMode>
+    </fileset>
+
+    <fileset>
+      <directory>/var/log/one</directory>
+      <directoryMode>755</directoryMode>
+    </fileset>
+
+    <fileset>
+      <directory>/var/run/one</directory>
+      <directoryMode>755</directoryMode>
+    </fileset>
+
+    <fileset>
+      <directory>/var/lib/one</directory>
+      <directoryMode>755</directoryMode>
+    </fileset>
+
+    <fileset>
+      <directory>/var/lib/one/images</directory>
+      <directoryMode>3770</directoryMode>
+    </fileset>
+
+    <fileset>
+      <directory>/var/lib/one/vms</directory>
+      <directoryMode>3770</directoryMode>
+    </fileset>
+
+    <fileset>
+      <directory>/var/lib/one/remotes</directory>
+      <directoryMode>755</directoryMode>
+      <fileMode>755</fileMode>
+      <directoryIncluded>true</directoryIncluded>
+      <sources>
+        <source>
+          <location>target/one-install/var/lib/one/remotes</location>
+          <includes>
+            <include>**/*</include>
+          </includes>
+        </source>
+      </sources>
+    </fileset>
+
+    <fileset>
+      <directory>/usr/lib/one/mads</directory>
+      <directoryMode>755</directoryMode>
+      <fileMode>755</fileMode>
+      <sources>
+        <source>
+          <location>src/main/ruby</location>
+          <includes>
+            <include>**/*</include>
+          </includes>
+        </source>
+      </sources>
+    </fileset>
+
+    <fileset>
+      <directory>/etc/init.d/</directory>
+      <directoryMode>755</directoryMode>
+      <fileMode>755</fileMode>
+      <sources>
+        <source>
+          <location>src/main/scripts</location>
+          <includes>
+            <include>oned</include>
+          </includes>
+        </source>
+      </sources>
+    </fileset>
+
+    <fileset>
+      <directory>/var/share/stratuslab/context</directory>
+      <fileMode>755</fileMode>
+      <sources>
+        <source>
+          <location>src/main/scripts</location>
+          <includes>
+            <include>init.sh</include>
+          </includes>
+        </source>
+      </sources>
+    </fileset>
+
+    <fileset>
+      <directory>/etc</directory>
+      <fileMode>655</fileMode>
+      <sources>
+        <source>
+          <location>target/one-install/etc</location>
+          <includes>
+            <include>**/*</include>
+          </includes>
+          <excludes>
+            <exclude>**/auth.conf</exclude>
+          </excludes>
+        </source>
+      </sources>
+    </fileset>
+
+    <fileset>
+      <directory>/usr/bin</directory>
+      <fileMode>755</fileMode>
+      <sources>
+        <source>
+          <location>target/one-install/usr/bin</location>
+          <includes>
+            <include>**/*</include>
+          </includes>
+        </source>
+      </sources>
+    </fileset>
+
+    <fileset>
+      <directory>/usr/lib</directory>
+      <fileMode>755</fileMode>
+      <sources>
+        <source>
+          <location>target/one-install/usr/lib</location>
+          <includes>
+            <include>**/*</include>
+          </includes>
+        </source>
+      </sources>
+    </fileset>
+
+    <fileset>
+      <directory>/usr/share</directory>
+      <fileMode>644</fileMode>
+      <sources>
+        <source>
+          <location>target/one-install/usr/share</location>
+          <includes>
+            <include>**/*</include>
+          </includes>
+          <excludes>
+            <exclude>one/hooks/**/*</exclude>
+          </excludes>
+        </source>
+      </sources>
+    </fileset>
+
+    <fileset>
+      <directory>/usr/share/one/hooks</directory>
+      <fileMode>755</fileMode>
+      <sources>
+        <source>
+          <location>target/one-install/usr/share/one/hooks</location>
+          <includes>
+            <include>**/*</include>
+          </includes>
+        </source>
+      </sources>
+    </fileset>
+
+    <fileset>
+      <directory>/etc/one</directory>
+      <fileMode>644</fileMode>
+      <sources>
+        <source>
+          <location>src/main/share</location>
+          <includes>
+            <include>**/*</include>
+          </includes>
+        </source>
+      </sources>
+    </fileset>
+
+    <fileset>
+      <directory>/usr/lib/one/tm_commands</directory>
+      <fileMode>755</fileMode>
+      <sources>
+        <source>
+          <location>src/main/scripts/tm_commands</location>
+          <includes>
+            <include>**/*</include>
+          </includes>
+        </source>
+      </sources>
+    </fileset>
+
+  </fileSets>
+  
+</assembly>

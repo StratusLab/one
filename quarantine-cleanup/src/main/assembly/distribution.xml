@@ -1,0 +1,27 @@
+<assembly>
+  <id>distribution</id>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+  
+  <formats>
+    <format>zip</format>
+  </formats>
+  
+  <fileSets>
+    <fileSet>
+      <directory>src/main/scripts</directory>
+      <outputDirectory>etc/cron.d</outputDirectory>
+      <includes>
+	<include>*.cron</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>src/main/scripts</directory>
+      <outputDirectory>etc/logrotate.d</outputDirectory>
+      <includes>
+	<include>*.logrotate</include>
+      </includes>
+    </fileSet>
+  </fileSets>
+  
+</assembly>
