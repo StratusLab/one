@@ -61,6 +61,15 @@
     </fileSet>
 
     <fileSet>
+      <outputDirectory>/etc/one/auth</outputDirectory>
+      <fileMode>644</fileMode>
+      <directory>src/main/share/auth</directory>
+      <includes>
+	<include>auth.conf</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
       <outputDirectory>/usr/bin</outputDirectory>
       <fileMode>755</fileMode>
       <directory>target/one-install/usr/bin</directory>
