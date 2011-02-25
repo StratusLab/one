@@ -7,4 +7,4 @@ index abe2945..89b9ed8 100644
  export LIBVIRT_URI=qemu:///system
  
 -export QEMU_PROTOCOL=qemu
-+export QEMU_PROTOCOL=qemu++ssh
++export QEMU_PROTOCOL=qemu+ssh
