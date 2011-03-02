@@ -71,9 +71,6 @@
 	  <conflicts>
 	    <conflict>one-2.0-StratusLab</conflict>
 	  </conflicts>
-	  <obsoletes>
-	    <obsolete>one-2.0-StratusLab</obsolete>
-	  </obsoletes>
 	  <provides>
 	    <provide>opennebula</provide>
 	    <provide>one</provide>
