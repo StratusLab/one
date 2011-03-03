@@ -1,0 +1,13 @@
+diff --git a/src/vmm/LibVirtDriverKVM.cc b/src/vmm/LibVirtDriverKVM.cc
+index ce71f4e..8287524 100644
+--- a/src/vmm/LibVirtDriverKVM.cc
++++ b/src/vmm/LibVirtDriverKVM.cc
+@@ -262,7 +262,7 @@ int LibVirtDriver::deployment_description_kvm(
+ 
+         if(emulator_path.empty())
+         {
+-            emulator_path = "/usr/bin/kvm";
++            emulator_path = "/usr/libexec/qemu-kvm";
+         }
+ 
+         file << "\t\t<emulator>" << emulator_path << "</emulator>" << endl;
