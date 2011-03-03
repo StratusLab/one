@@ -38,7 +38,7 @@
 
     <fileSet>
       <directory>src/main/scripts</directory>
-      <outputDirectory>bin</outputDirectory>
+      <outputDirectory>sbin</outputDirectory>
       <fileMode>755</fileMode>
       <includes>
 	<include>*.sh</include>
