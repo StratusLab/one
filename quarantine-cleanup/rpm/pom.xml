@@ -115,14 +115,14 @@ for virtual machines.
 	    </mapping>
 
 	    <mapping>
-	      <directory>/usr/bin</directory>
+	      <directory>/usr/sbin</directory>
 	      <filemode>755</filemode>
 	      <username>root</username>
 	      <groupname>root</groupname>
 	      <directoryIncluded>false</directoryIncluded>
 	      <sources>
 		<source>
-		  <location>target/distribution/bin</location>
+		  <location>target/distribution/sbin</location>
 		</source>
 	      </sources>
 	    </mapping>
