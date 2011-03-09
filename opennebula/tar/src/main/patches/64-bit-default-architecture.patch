@@ -1,0 +1,13 @@
+diff --git a/src/vmm_mad/ssh/vmm_ssh_kvm.conf b/src/vmm_mad/ssh/vmm_ssh_kvm.conf
+index af6920d..f9dacbb 100644
+--- a/src/vmm_mad/ssh/vmm_ssh_kvm.conf
++++ b/src/vmm_mad/ssh/vmm_ssh_kvm.conf
+@@ -30,7 +30,7 @@
+ #VCPU = 1
+ #MEMORY =  128
+ 
+-OS       = [ boot = "hd", arch = "i686" ]
++OS       = [ boot = "hd", arch = "x86_64" ]
+ FEATURES = [ PAE = "no", ACPI = "yes" ]
+ 
+ DISK     = [ driver = "raw" ]
