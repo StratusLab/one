@@ -48,6 +48,7 @@ fi
 get_vmdir
 
 SRC_PATH=`arg_path $SRC`
+SRC_HOST=`arg_host $SRC`
 
 # This appears to do exactly the wrong thing.
 #fix_src_path
@@ -62,12 +63,8 @@ QUARANTINE_DIR=$QUARANTINE_DIR/quarantine
 SRC_DIR=`dirname $SRC_PATH`
 
 # Check for persistent disks.
-log "info: checking for persistent disks ($SRC_DIR)" 
-for $i in $SRC_DIR/*.iscsi.uuid; do
-  UUID=`cat $i`
-  log "info: detaching persistent disk ($UUID)" 
-  sudo /usr/sbin/detach-persistent-disk.sh $i
-done
+log "info: checking for persistent disks ($SRC_HOST, $SRC_DIR)" 
+exec_and_log "ssh -t -t $SRC_HOST sudo /usr/sbin/detach-persistent-disk.sh $SRC_DIR"
 
 # Log what is going to be done. 
 log "info: beginning to move files to quarantine ($SRC_DIR, $QUARANTINE_DIR)" 

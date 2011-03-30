@@ -63,10 +63,10 @@ index 046a277..17a0a6e 100755
 +exec_and_log "$SSH $DST_HOST chmod ug+w,o-rwx $DST_PATH"
  
 diff --git a/src/tm_mad/nfs/tm_clone.sh b/src/tm_mad/nfs/tm_clone.sh
-index b54c826..8ecf968 100755
+index b54c826..cfb6348 100755
 --- a/src/tm_mad/nfs/tm_clone.sh
 +++ b/src/tm_mad/nfs/tm_clone.sh
-@@ -39,14 +39,30 @@ log "DST: $DST_PATH"
+@@ -39,14 +39,31 @@ log "DST: $DST_PATH"
  
  DST_DIR=`dirname $DST_PATH`
  
@@ -96,17 +96,20 @@ index b54c826..8ecf968 100755
 +
 +pdisk:*)
 +    log "Persistent disk handling $SRC $DST"
-+    exec_and_log "sudo /usr/sbin/attach-persistent-disk.sh $SRC $DST_PATH"
++    DST_HOST=`arg_host $DST`
++    exec_and_log "$SSH -t -t $DST_HOST sudo /usr/sbin/attach-persistent-disk.sh $SRC $DST_PATH"
      ;;
  
  *)
-@@ -55,5 +71,5 @@ http://*)
+@@ -55,5 +72,6 @@ http://*)
      ;;
  esac
  
 -exec_and_log "chmod a+rw $DST_PATH"
-+exec_and_log "chmod ug+rw,o-rwx $DST_PATH"
- 
+-
++if [ -e $DST_PATH && ! -L $DST_PATH ]; then
++  exec_and_log "chmod ug+rw,o-rwx $DST_PATH"
++fi
 diff --git a/src/tm_mad/nfs/tm_context.sh b/src/tm_mad/nfs/tm_context.sh
 index b079622..ac6c2b7 100755
 --- a/src/tm_mad/nfs/tm_context.sh
@@ -165,7 +168,7 @@ index af78a59..635a92a 100755
 +exec_and_log "chmod ug+w,o-rwx $DST_PATH"
  
 diff --git a/src/tm_mad/ssh/tm_clone.sh b/src/tm_mad/ssh/tm_clone.sh
-index 8507c43..a45b1da 100755
+index 8507c43..f74bd29 100755
 --- a/src/tm_mad/ssh/tm_clone.sh
 +++ b/src/tm_mad/ssh/tm_clone.sh
 @@ -43,9 +43,24 @@ log "Creating directory $DST_DIR"
@@ -191,17 +194,19 @@ index 8507c43..a45b1da 100755
 +
 +pdisk:*)
 +    log "Persistent disk handling $SRC $DST"
-+    exec_and_log "sudo /usr/sbin/attach-persistent-disk.sh $SRC $DST_PATH"
++    exec_and_log "$SSH -t -t $DST_HOST sudo /usr/sbin/attach-persistent-disk.sh $SRC $DST_PATH"
      ;;
  
  *)
-@@ -54,5 +69,5 @@ http://*)
+@@ -54,5 +69,6 @@ http://*)
      ;;
  esac
  
 -exec_and_log "$SSH $DST_HOST chmod a+rw $DST_PATH"
-+exec_and_log "$SSH $DST_HOST chmod ug+w,o-rwx $DST_PATH"
- 
+-
++if [ ! -L $DST_PATH ]; then
++  exec_and_log "$SSH $DST_HOST chmod --quiet ug+w,o-rwx $DST_PATH"
++fi
 diff --git a/src/tm_mad/ssh/tm_context.sh b/src/tm_mad/ssh/tm_context.sh
 index ee7fd40..887d978 100755
 --- a/src/tm_mad/ssh/tm_context.sh

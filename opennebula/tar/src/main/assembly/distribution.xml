@@ -49,16 +49,6 @@
     </fileSet>
 
     <fileSet>
-      <outputDirectory>/usr/sbin</outputDirectory>
-      <directoryMode>755</directoryMode>
-      <fileMode>755</fileMode>
-      <directory>src/main/scripts/storage</directory>
-      <includes>
-	<include>**/*</include>
-      </includes>
-    </fileSet>
-
-    <fileSet>
       <outputDirectory>/etc</outputDirectory>
       <fileMode>644</fileMode>
       <directory>target/one-install/etc</directory>
