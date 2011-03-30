@@ -62,6 +62,14 @@ QUARANTINE_DIR=$QUARANTINE_DIR/quarantine
 # Original directory with VM files.  Essentially: $SRC_PATH/../.
 SRC_DIR=`dirname $SRC_PATH`
 
+# Check for persistent disks.
+log "info: checking for persistent disks ($SRC_DIR)" 
+for $i in $SRC_DIR/*.iscsi.uuid; do
+  UUID=`cat $i`
+  log "info: detaching persistent disk ($UUID)" 
+  sudo /usr/sbin/detach-persistent-disk.sh $i
+done
+
 # Log what is going to be done. 
 log "info: beginning to move files to quarantine ($SRC_DIR, $QUARANTINE_DIR)" 
 
