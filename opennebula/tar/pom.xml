@@ -38,7 +38,7 @@
 	    </goals>
 	    <configuration>
               <connectionType>connection</connectionType>
-              <connectionUrl>scm:git:git://opennebula.org/one-stratuslab.git</connectionUrl>
+              <connectionUrl>scm:git:git://git.opennebula.org/one-stratuslab.git</connectionUrl>
 	      <scmVersion>master</scmVersion>
 	      <scmVersionType>tag</scmVersionType>
 	    </configuration>
