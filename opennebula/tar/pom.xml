@@ -78,6 +78,9 @@
 	    </goals>
 	    <configuration>
 	      <executable>scons</executable>
+              <arguments>
+                <argument>mysql=yes</argument>
+              </arguments>
 	      <workingDirectory>${project.build.directory}/checkout</workingDirectory>
 	    </configuration>
           </execution>
