@@ -84,6 +84,9 @@
 	    <require>mkisofs</require>
 	    <require>rubygem-sequel</require>
 	    <require>rubygem-sqlite3-ruby</require>
+	    <require>mysql</require>
+	    <require>mysql-server</require>
+	    <require>mysql-devel</require>
 	  </requires>
 	  <needarch>x86_64</needarch>
 	  <description>
