@@ -10,7 +10,7 @@ if [ -n "$SCRIPT_EXEC" ]; then
     CONTEXT=$(mktemp)
     cp -f /mnt/stratuslab/context.sh $CONTEXT
     sed -i -e '/^[A-Z]*=/s|^|export |' $CONTEXT
-    source $CONTEXT
+    . $CONTEXT
     rm -f $CONTEXT
     INIT_SCRIPT=/tmp/init_extra.sh
     echo $SCRIPT_EXEC > $INIT_SCRIPT
