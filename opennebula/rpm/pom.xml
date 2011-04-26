@@ -80,13 +80,14 @@
 	    <require>openssl</require>
 	    <require>xmlrpc-c</require>
 	    <require>ruby &gt;= 1.8.6.287</require>
-	    <require>sqlite &gt;= 3.7.0</require>
+	    <!--<require>sqlite &gt;= 3.7.0</require>-->
 	    <require>mkisofs</require>
 	    <require>rubygem-sequel</require>
-	    <require>rubygem-sqlite3-ruby</require>
+	    <!--<require>rubygem-sqlite3-ruby</require>-->
 	    <require>mysql</require>
 	    <require>mysql-server</require>
 	    <require>mysql-devel</require>
+	    <require>ruby-mysql</require>
 	  </requires>
 	  <needarch>x86_64</needarch>
 	  <description>
