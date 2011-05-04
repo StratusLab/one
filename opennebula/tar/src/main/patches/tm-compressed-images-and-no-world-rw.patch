@@ -30,7 +30,7 @@ index ea98602..3f68e83 100755
 +exec_and_log "ssh $DST_HOST chmod ug+w,o-rwx $DST_PATH"
  
 diff --git a/src/mad/sh/scripts_common.sh b/src/mad/sh/scripts_common.sh
-index 3127108..9ab2bf4 100755
+index 3d59047..6ac998e 100755
 --- a/src/mad/sh/scripts_common.sh
 +++ b/src/mad/sh/scripts_common.sh
 @@ -32,6 +32,9 @@ SED=/bin/sed
@@ -43,7 +43,7 @@ index 3127108..9ab2bf4 100755
  
  # Used for log messages
  SCRIPT_NAME=`basename $0`
-@@ -117,3 +120,19 @@ function timeout_exec_and_log
+@@ -145,3 +148,19 @@ function timeout_exec_and_log
          exit $CMD_CODE
      fi
  }
@@ -97,42 +97,43 @@ index 046a277..17a0a6e 100755
 +exec_and_log "$SSH $DST_HOST chmod ug+w,o-rwx $DST_PATH"
  
 diff --git a/src/tm_mad/nfs/tm_clone.sh b/src/tm_mad/nfs/tm_clone.sh
-index b54c826..e08c9e4 100755
+index 62c33fc..ac02b02 100755
 --- a/src/tm_mad/nfs/tm_clone.sh
 +++ b/src/tm_mad/nfs/tm_clone.sh
-@@ -39,21 +39,50 @@ log "DST: $DST_PATH"
+@@ -41,21 +41,53 @@ DST_DIR=`dirname $DST_PATH`
  
- DST_DIR=`dirname $DST_PATH`
- 
-+
  log "Creating directory $DST_DIR"
  exec_and_log "mkdir -p $DST_DIR"
 -exec_and_log "chmod a+w $DST_DIR"
--
++exec_and_log "chmod ug+w,o-rwx $DST_DIR"
+ 
 -case $SRC in
 -http://*)
 -    log "Downloading $SRC"
--    exec_and_log "$WGET -O $DST_PATH $SRC"
+-    exec_and_log "$WGET -O $DST_PATH $SRC" \
+-        "Error downloading $SRC"
 -    ;;
-+exec_and_log "chmod ug+w,o-rwx $DST_DIR"
- 
--*)
--    log "Cloning $SRC_PATH"
--    exec_and_log "cp -r $SRC_PATH $DST_PATH"
--    ;;
--esac
 +function _download_and_extract () {
 +    case $SRC in
 +    http://*.gz|https://*.gz)
 +        log "Downloading GZip archive $SRC"
-+        exec_and_log "download_and_extract $SRC $DST_PATH.gz $GUNZIP"
++        exec_and_log "download_and_extract $SRC $DST_PATH.gz $GUNZIP" \
++            "Error downloading $SRC"
 +        ;;
-+    
+ 
+-*)
+-    log "Cloning $SRC_PATH"
+-    exec_and_log "cp -r $SRC_PATH $DST_PATH" \
+-        "Error copying $SRC to $DST"
+-    ;;
+-esac
 +    http://*.bz2|https://*.bz2)
 +        log "Downloading BZip2 archive $SRC"
-+        exec_and_log "download_and_extract $SRC $DST_PATH.bz2 $BUNZIP2"
++        exec_and_log "download_and_extract $SRC $DST_PATH.bz2 $BUNZIP2" \
++            "Error downloading $SRC"
 +        ;;
-+    
+ 
+-exec_and_log "chmod a+rw $DST_PATH"
 +    http://*|https://)
 +        LOCATION=$(python2.6 $(which stratus-manifest) --get-element location $SRC)
 +        rc=$?
@@ -142,35 +143,38 @@ index b54c826..e08c9e4 100755
 +            _download_and_extract
 +        else
 +            log "Downloading $SRC"
-+            exec_and_log "$CURL -k -o $DST_PATH $SRC"
++            exec_and_log "$CURL -k -o $DST_PATH $SRC" \
++                "Error downloading $SRC"
 +        fi
 +        ;;
-+    
+ 
 +    pdisk:*)
 +        log "Persistent disk handling $SRC $DST"
-+        exec_and_log "sudo /usr/sbin/attach-persistent-disk.sh $SRC $DST_PATH"
++        exec_and_log \
++            "sudo /usr/sbin/attach-persistent-disk.sh $SRC $DST_PATH" \
++            "Failed to create persistent disk $DST_PATH"
 +        ;;
-+    
++
 +    *)
 +        log "Cloning $SRC_PATH"
-+        exec_and_log "cp -r $SRC_PATH $DST_PATH"
++        exec_and_log "cp -r $SRC_PATH $DST_PATH" \
++            "Error copying $SRC to $DST"
 +        ;;
 +    esac
 +}
- 
--exec_and_log "chmod a+rw $DST_PATH"
++
 +_download_and_extract
- 
++
 +if [ -e $DST_PATH && ! -L $DST_PATH ]; then
 +  exec_and_log "chmod ug+rw,o-rwx $DST_PATH"
 +fi
 diff --git a/src/tm_mad/nfs/tm_context.sh b/src/tm_mad/nfs/tm_context.sh
-index b079622..ac6c2b7 100755
+index f211024..ae44a47 100755
 --- a/src/tm_mad/nfs/tm_context.sh
 +++ b/src/tm_mad/nfs/tm_context.sh
-@@ -59,6 +59,8 @@ done
- 
- exec_and_log "$MKISOFS -o $DST_PATH -J -R $ISO_DIR"
+@@ -62,6 +62,8 @@ done
+ exec_and_log "$MKISOFS -o $DST_PATH -J -R $ISO_DIR" \
+     "Error creating iso fs"
  
 +exec_and_log "chmod o-rwx $DST_PATH"
 +
@@ -178,74 +182,86 @@ index b079622..ac6c2b7 100755
  
  
 diff --git a/src/tm_mad/nfs/tm_ln.sh b/src/tm_mad/nfs/tm_ln.sh
-index 33b4a2a..8b6ab90 100755
+index 1a3578e..e0254dc 100755
 --- a/src/tm_mad/nfs/tm_ln.sh
 +++ b/src/tm_mad/nfs/tm_ln.sh
-@@ -38,7 +38,7 @@ DST_DIR=`dirname $DST_PATH`
- 
+@@ -39,7 +39,7 @@ DST_DIR=`dirname $DST_PATH`
  log "Creating directory $DST_DIR"
- exec_and_log "mkdir -p $DST_DIR"
+ exec_and_log "mkdir -p $DST_DIR" \
+     "Could not create directory $DST_DIR"
 -exec_and_log "chmod a+w $DST_DIR"
 +exec_and_log "chmod ug+w,o-rwx $DST_DIR"
  
  log "Link $SRC_PATH"
  exec_and_log "ln -s $SRC_PATH $DST_PATH"
 diff --git a/src/tm_mad/nfs/tm_mkimage.sh b/src/tm_mad/nfs/tm_mkimage.sh
-index ddafb40..3184025 100755
+index b30c0ff..f83be45 100755
 --- a/src/tm_mad/nfs/tm_mkimage.sh
 +++ b/src/tm_mad/nfs/tm_mkimage.sh
-@@ -39,5 +39,5 @@ DST_DIR=`dirname $DST_PATH`
- exec_and_log "mkdir -p $DST_DIR"
- exec_and_log "$DD if=/dev/zero of=$DST_PATH bs=1 count=1 seek=${SIZE}M"
- exec_and_log "$MKFS -t $FSTYPE -F $DST_PATH"
+@@ -42,5 +42,5 @@ exec_and_log "$DD if=/dev/zero of=$DST_PATH bs=1 count=1 seek=${SIZE}M" \
+     "Could not create image $DST_PATH"
+ exec_and_log "$MKFS -t $FSTYPE -F $DST_PATH" \
+     "Unable to create filesystem $FSTYPE in $DST_PATH"
 -exec_and_log "chmod a+rw $DST_PATH"
 +exec_and_log "chmod ug+rw,o-rwx $DST_PATH"
  
 diff --git a/src/tm_mad/nfs/tm_mkswap.sh b/src/tm_mad/nfs/tm_mkswap.sh
-index af78a59..635a92a 100755
+index 58b1e28..c44e3a8 100755
 --- a/src/tm_mad/nfs/tm_mkswap.sh
 +++ b/src/tm_mad/nfs/tm_mkswap.sh
 @@ -37,7 +37,7 @@ DST_DIR=`dirname $DST_PATH`
  
- log "Creating directory $DST_DIR"
+ log_debug "Creating directory $DST_DIR"
  exec_and_log "mkdir -p $DST_DIR"
 -exec_and_log "chmod a+w $DST_DIR"
 +exec_and_log "chmod ug+w,o-rwx $DST_DIR"
  
- log "Creating ${SIZE}Mb image in $DST_PATH"
- exec_and_log "$DD if=/dev/zero of=$DST_PATH bs=1 count=1 seek=${SIZE}M"
-@@ -45,5 +45,5 @@ exec_and_log "$DD if=/dev/zero of=$DST_PATH bs=1 count=1 seek=${SIZE}M"
- log "Initializing swap space"
- exec_and_log "$MKSWAP $DST_PATH"
+ log_debug "Creating ${SIZE}Mb image in $DST_PATH"
+ exec_and_log "$DD if=/dev/zero of=$DST_PATH bs=1 count=1 seek=${SIZE}M" \
+@@ -47,5 +47,5 @@ log_debug "Initializing swap space"
+ exec_and_log "$MKSWAP $DST_PATH" \
+     "Could not create swap on $DST_PATH"
  
 -exec_and_log "chmod a+w $DST_PATH"
 +exec_and_log "chmod ug+w,o-rwx $DST_PATH"
  
 diff --git a/src/tm_mad/ssh/tm_clone.sh b/src/tm_mad/ssh/tm_clone.sh
-index 8507c43..216370c 100755
+index 71800d1..e26b8cf 100755
 --- a/src/tm_mad/ssh/tm_clone.sh
 +++ b/src/tm_mad/ssh/tm_clone.sh
-@@ -42,17 +42,47 @@ DST_DIR=`dirname $DST_PATH`
- log "Creating directory $DST_DIR"
- exec_and_log "$SSH $DST_HOST mkdir -p $DST_DIR"
+@@ -43,19 +43,51 @@ log "Creating directory $DST_DIR"
+ exec_and_log "$SSH $DST_HOST mkdir -p $DST_DIR" \
+     "Error creating directory $DST_DIR"
  
 -case $SRC in
 -http://*)
 -    log "Downloading $SRC"
--    exec_and_log "$SSH $DST_HOST $WGET -O $DST_PATH $SRC"
+-    exec_and_log "$SSH $DST_HOST $WGET -O $DST_PATH $SRC" \
+-        "Error downloading $SRC"
 -    ;;
+-
+-*)
+-    log "Cloning $SRC"
+-    exec_and_log "$SCP $SRC $DST" \
+-        "Error copying $SRC to $DST"
+-    ;;
+-esac
+-
+-exec_and_log "$SSH $DST_HOST chmod a+rw $DST_PATH"
 +function _download_and_extract () {
 +    case $SRC in
 +    http://*.gz|https://*.gz)
 +        log "Downloading GZip archive $SRC"
-+        exec_and_log "download_and_extract $SRC $DST_PATH.gz $GUNZIP $DST_HOST"
++        exec_and_log "download_and_extract $SRC $DST_PATH.gz $GUNZIP $DST_HOST" \
++            "Error downloading $SRC"
 +        ;;
-+    
++
 +    http://*.bz2|https://*.bz2)
 +        log "Downloading BZip2 archive $SRC"
-+        exec_and_log "download_and_extract $SRC $DST_PATH.bz2 $BUNZIP2 $DST_HOST"
++        exec_and_log "download_and_extract $SRC $DST_PATH.bz2 $BUNZIP2 $DST_HOST" \
++            "Error downloading $SRC"
 +        ;;
-+    
++
 +    http://*|https://)
 +        LOCATION=$(python2.6 $(which stratus-manifest) --get-element location $SRC)
 +        rc=$?
@@ -255,64 +271,62 @@ index 8507c43..216370c 100755
 +            _download_and_extract
 +        else
 +            log "Downloading $SRC"
-+            exec_and_log "$CURL -k -o $DST_PATH $SRC"
++            exec_and_log "$CURL -k -o $DST_PATH $SRC" \
++                "Error downloading $SRC"
 +        fi
-+        ;; 
- 
--*)
--    log "Cloning $SRC"
--    exec_and_log "$SCP $SRC $DST"
--    ;;
--esac
++        ;;
++
 +    pdisk:*)
 +        log "Persistent disk handling $SRC $DST"
 +        DST_HOST=`arg_host $DST`
-+        exec_and_log "$SSH -t -t $DST_HOST sudo /usr/sbin/attach-persistent-disk.sh $SRC $DST_PATH"
++        exec_and_log "$SSH -t -t $DST_HOST sudo /usr/sbin/attach-persistent-disk.sh $SRC $DST_PATH" \
++            "Failed to create persistent disk $DST_PATH"
 +        ;;
- 
--exec_and_log "$SSH $DST_HOST chmod a+rw $DST_PATH"
-+    
++
 +    *)
 +        log "Cloning $SRC"
-+        exec_and_log "$SCP $SRC $DST"
++        exec_and_log "$SCP $SRC $DST" "Error copying $SRC to $DST"
 +        ;;
 +    esac
 +}
- 
++
 +_download_and_extract
 +
 +if [ ! -L $DST_PATH ]; then
 +  exec_and_log "$SSH $DST_HOST chmod --quiet ug+w,o-rwx $DST_PATH"
 +fi
+ 
 diff --git a/src/tm_mad/ssh/tm_context.sh b/src/tm_mad/ssh/tm_context.sh
-index ee7fd40..887d978 100755
+index 322ebda..bdff870 100755
 --- a/src/tm_mad/ssh/tm_context.sh
 +++ b/src/tm_mad/ssh/tm_context.sh
-@@ -62,6 +62,7 @@ for f in $SRC; do
- done
+@@ -66,6 +66,7 @@ done
  
- exec_and_log "$MKISOFS -o $TMP_DIR/$DST_FILE -J -R $ISO_DIR"
+ exec_and_log "$MKISOFS -o $TMP_DIR/$DST_FILE -J -R $ISO_DIR" \
+     "Error creating iso fs"
 +exec_and_log "chmod o-rwx $TMP_DIR/$DST_FILE"
- exec_and_log "$SCP $TMP_DIR/$DST_FILE $DST"
- exec_and_log "rm -rf $TMP_DIR"
- 
+ exec_and_log "$SCP $TMP_DIR/$DST_FILE $DST" \
+     "Error copying $TMP_DIR/$DST_FILE to $DST"
+ exec_and_log "rm -rf $TMP_DIR" \
 diff --git a/src/tm_mad/ssh/tm_mkimage.sh b/src/tm_mad/ssh/tm_mkimage.sh
-index d092a8b..131cc17 100755
+index 81ff20f..63aefe3 100755
 --- a/src/tm_mad/ssh/tm_mkimage.sh
 +++ b/src/tm_mad/ssh/tm_mkimage.sh
-@@ -35,4 +35,4 @@ DST_DIR=`dirname $DST_PATH`
- exec_and_log "$SSH $DST_HOST mkdir -p $DST_DIR"
- exec_and_log "$SSH $DST_HOST $DD if=/dev/zero of=$DST_PATH bs=1 count=1 seek=${SIZE}M"
- exec_and_log "$SSH $DST_HOST $MKFS -t $FSTYPE -F $DST_PATH"
+@@ -38,4 +38,5 @@ exec_and_log "$SSH $DST_HOST $DD if=/dev/zero of=$DST_PATH bs=1 count=1 seek=${S
+     "Could not create image $DST_PATH"
+ exec_and_log "$SSH $DST_HOST $MKFS -t $FSTYPE -F $DST_PATH" \
+     "Unable to create filesystem $FSTYPE in $DST_PATH"
 -exec_and_log "$SSH $DST_HOST chmod a+rw $DST_PATH"
+\ No newline at end of file
 +exec_and_log "$SSH $DST_HOST chmod ug+rw,o-rwx $DST_PATH"
++
 diff --git a/src/tm_mad/ssh/tm_mkswap.sh b/src/tm_mad/ssh/tm_mkswap.sh
-index 046a277..17a0a6e 100755
+index 6070513..5379eb9 100755
 --- a/src/tm_mad/ssh/tm_mkswap.sh
 +++ b/src/tm_mad/ssh/tm_mkswap.sh
-@@ -39,5 +39,5 @@ exec_and_log "$SSH $DST_HOST $DD if=/dev/zero of=$DST_PATH bs=1 count=1 seek=${S
- log "Initializing swap space"
- exec_and_log "$SSH $DST_HOST $MKSWAP $DST_PATH"
+@@ -41,5 +41,5 @@ log "Initializing swap space"
+ exec_and_log "$SSH $DST_HOST $MKSWAP $DST_PATH" \
+     "Could not create swap on $DST_PATH"
  
 -exec_and_log "$SSH $DST_HOST chmod a+w $DST_PATH"
 +exec_and_log "$SSH $DST_HOST chmod ug+w,o-rwx $DST_PATH"
