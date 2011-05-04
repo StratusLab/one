@@ -255,7 +255,7 @@ index 8507c43..216370c 100755
 +            _download_and_extract
 +        else
 +            log "Downloading $SRC"
-+            exec_and_log "$CURL -k -o $DST_PATH $SRC"
++            exec_and_log "$SSH $DST_HOST $CURL -k -o $DST_PATH $SRC"
 +        fi
 +        ;; 
  
