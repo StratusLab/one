@@ -66,6 +66,11 @@ package and utilities.
     </site>
   </distributionManagement>
 
+  <properties>
+    <nexus.release.repository.name>releases</nexus.release.repository.name>
+    <nexus.snapshot.repository.name>snapshots</nexus.snapshot.repository.name>
+  </properties>
+
   <build>
 
     <pluginManagement>
