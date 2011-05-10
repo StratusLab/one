@@ -80,6 +80,7 @@
 	      <executable>scons</executable>
               <arguments>
                 <argument>mysql=yes</argument>
+                <argument>sqlite=no</argument>
               </arguments>
 	      <workingDirectory>${project.build.directory}/checkout</workingDirectory>
 	    </configuration>
