@@ -64,16 +64,9 @@ function _download_and_extract () {
         if [ "$rc" == "0" ] && [ -n "${IMAGE_IDENTIFIER}" ]; then
             log "Image identifier from image manifest: ${IMAGE_IDENTIFIER}"
             if [ -e "${STRATUS_POLICY}" ]; then
-                stratus-policy-image ${IMAGE_IDENTIFIER} ${STRATUS_POLICY}
-                rc=$?
-                if [ "$rc" == "0" ]; then
-                    log "Image ${IMAGE_IDENTIFIER} Valid according to site policy"
-                else
-                    error_message "Image ${IMAGE_IDENTIFIER} isn't Valid according to site policy"
-                    exit -1
-                fi
+                exec_and_log "stratus-policy-image ${IMAGE_IDENTIFIER} ${STRATUS_POLICY}"
             else
-                error_message "${STRATUS_POLICY} not such file or directory"
+                error_message "Site policy isn't defined : ${STRATUS_POLICY} not such file or directory"
                 exit -1
             fi
         else
