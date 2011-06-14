@@ -2,7 +2,7 @@
 #
 # oned -- OpenNebula Daemon
 #
-# chkconfig: 2345 80 30
+# chkconfig: 2345 99 30
 # description: OpenNebula is a Virtual Infrastructure Manaager
 # processname: oned
 # config: /srv/cloud/one/etc/oned.conf

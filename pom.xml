@@ -4,7 +4,7 @@
   
   <groupId>eu.stratuslab.pkgs</groupId>
   <artifactId>one</artifactId>  
-  <version>0.1.4-SNAPSHOT</version>
+  <version>0.1.5-SNAPSHOT</version>
   <name>OpenNebula (ROOT POM)</name>
 
   <url>http://hudson.stratuslab.eu/one</url>
@@ -67,8 +67,8 @@ package and utilities.
   </distributionManagement>
 
   <properties>
-    <nexus.release.repository.name>releases</nexus.release.repository.name>
-    <nexus.snapshot.repository.name>snapshots</nexus.snapshot.repository.name>
+    <nexus.release.repository.name>fedora-14-releases</nexus.release.repository.name>
+    <nexus.snapshot.repository.name>fedora-14-snapshots</nexus.snapshot.repository.name>
   </properties>
 
   <build>

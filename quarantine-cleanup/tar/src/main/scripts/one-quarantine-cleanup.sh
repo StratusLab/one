@@ -22,7 +22,7 @@
 
 CONFIG=/etc/stratuslab/quarantine.cfg
 COMMAND=/usr/sbin/tmpwatch
-LOCATION=/var/lib/one/vms/quarantine
+LOCATION=/var/lib/one/quarantine
 PERIOD=48
 
 if [ -e "$CONFIG" ]; then
