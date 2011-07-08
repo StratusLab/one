@@ -96,10 +96,10 @@ index 046a277..17a0a6e 100755
 -exec_and_log "$SSH $DST_HOST chmod a+w $DST_PATH"
 +exec_and_log "$SSH $DST_HOST chmod ug+w,o-rwx $DST_PATH"
  
-diff --git a/src/tm_mad/nfs/tm_clone.sh b/usr/lib/one/tm_commands/nfs/tm_clone.sh
+diff --git a/src/tm_mad/nfs/tm_clone.sh b/src/tm_mad/nfs/tm_clone.sh
 index b54c826..d39b629 100755
 --- a/src/tm_mad/nfs/tm_clone.sh
-+++ b/usr/lib/one/tm_commands/nfs/tm_clone.sh
++++ b/src/tm_mad/nfs/tm_clone.sh
 @@ -31,29 +31,63 @@ get_vmdir
  
  SRC_PATH=`arg_path $SRC`
@@ -235,31 +235,29 @@ index 58b1e28..c44e3a8 100755
 -exec_and_log "chmod a+w $DST_PATH"
 +exec_and_log "chmod ug+w,o-rwx $DST_PATH"
  
-diff --git a/src/tm_mad/ssh/tm_clone.sh b/usr/lib/one/tm_commands/ssh/tm_clone.sh
-index 8507c43..b3e131e 100755
+diff --git a/src/tm_mad/ssh/tm_clone.sh b/src/tm_mad/ssh/tm_clone.sh
+index 71800d1..e26b8cf 100755
 --- a/src/tm_mad/ssh/tm_clone.sh
-+++ b/usr/lib/one/tm_commands/ssh/tm_clone.sh
-@@ -34,25 +34,60 @@ SRC_HOST=`arg_host $SRC`
- DST_HOST=`arg_host $DST`
- 
- 
--log "$1 $2"
--log "DST: $DST_PATH"
-+log_debug "$1 $2"
-+log_debug "DST: $DST_PATH"
- 
- DST_DIR=`dirname $DST_PATH`
- 
- log "Creating directory $DST_DIR"
--exec_and_log "$SSH $DST_HOST mkdir -p $DST_DIR"
-+exec_and_log "$SSH $DST_HOST mkdir -p $DST_DIR" \
-+    "Error creating directory $DST_DIR"
++++ b/src/tm_mad/ssh/tm_clone.sh
+@@ -43,19 +43,51 @@ log "Creating directory $DST_DIR"
+ exec_and_log "$SSH $DST_HOST mkdir -p $DST_DIR" \
+     "Error creating directory $DST_DIR"
  
 -case $SRC in
 -http://*)
 -    log "Downloading $SRC"
--    exec_and_log "$SSH $DST_HOST $WGET -O $DST_PATH $SRC"
+-    exec_and_log "$SSH $DST_HOST $WGET -O $DST_PATH $SRC" \
+-        "Error downloading $SRC"
 -    ;;
+-
+-*)
+-    log "Cloning $SRC"
+-    exec_and_log "$SCP $SRC $DST" \
+-        "Error copying $SRC to $DST"
+-    ;;
+-esac
+-
+-exec_and_log "$SSH $DST_HOST chmod a+rw $DST_PATH"
 +function _download_and_extract () {
 +    case $SRC in
 +    http://*.gz|https://*.gz)
@@ -267,19 +265,13 @@ index 8507c43..b3e131e 100755
 +        exec_and_log "download_and_extract $SRC $DST_PATH.gz $GUNZIP $DST_HOST" \
 +            "Error downloading $SRC"
 +        ;;
- 
--*)
--    log "Cloning $SRC"
--    exec_and_log "$SCP $SRC $DST"
--    ;;
--esac
++
 +    http://*.bz2|https://*.bz2)
 +        log "Downloading BZip2 archive $SRC"
 +        exec_and_log "download_and_extract $SRC $DST_PATH.bz2 $BUNZIP2 $DST_HOST" \
 +            "Error downloading $SRC"
 +        ;;
- 
--exec_and_log "$SSH $DST_HOST chmod a+rw $DST_PATH"
++
 +    http://*|https://)
 +        LOCATION=$(stratus-manifest --get-element location $SRC)
 +        rc=$?
