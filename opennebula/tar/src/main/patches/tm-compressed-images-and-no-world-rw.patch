@@ -97,10 +97,10 @@ index 046a277..17a0a6e 100755
 +exec_and_log "$SSH $DST_HOST chmod ug+w,o-rwx $DST_PATH"
  
 diff --git a/src/tm_mad/nfs/tm_clone.sh b/src/tm_mad/nfs/tm_clone.sh
-index b54c826..d39b629 100755
+index 62c33fc..3433700 100755
 --- a/src/tm_mad/nfs/tm_clone.sh
 +++ b/src/tm_mad/nfs/tm_clone.sh
-@@ -31,29 +31,63 @@ get_vmdir
+@@ -31,6 +31,7 @@ get_vmdir
  
  SRC_PATH=`arg_path $SRC`
  DST_PATH=`arg_path $DST`
@@ -108,23 +108,29 @@ index b54c826..d39b629 100755
  
  fix_paths
  
--log "$1 $2"
--log "DST: $DST_PATH"
-+log_debug "$1 $2"
-+log_debug "DST: $DST_PATH"
- 
- DST_DIR=`dirname $DST_PATH`
+@@ -41,21 +42,53 @@ DST_DIR=`dirname $DST_PATH`
  
  log "Creating directory $DST_DIR"
  exec_and_log "mkdir -p $DST_DIR"
 -exec_and_log "chmod a+w $DST_DIR"
-+exec_and_log "chmod ug+w,o-rwx $DST_DIR"
- 
+-
 -case $SRC in
 -http://*)
 -    log "Downloading $SRC"
--    exec_and_log "$WGET -O $DST_PATH $SRC"
+-    exec_and_log "$WGET -O $DST_PATH $SRC" \
+-        "Error downloading $SRC"
 -    ;;
+-
+-*)
+-    log "Cloning $SRC_PATH"
+-    exec_and_log "cp -r $SRC_PATH $DST_PATH" \
+-        "Error copying $SRC to $DST"
+-    ;;
+-esac
+-
+-exec_and_log "chmod a+rw $DST_PATH"
++exec_and_log "chmod ug+w,o-rwx $DST_DIR"
++
 +function _download_and_extract () {
 +    case $SRC in
 +    http://*.gz|https://*.gz)
@@ -132,19 +138,13 @@ index b54c826..d39b629 100755
 +        exec_and_log "download_and_extract $SRC $DST_PATH.gz $GUNZIP" \
 +            "Error downloading $SRC"
 +        ;;
- 
--*)
--    log "Cloning $SRC_PATH"
--    exec_and_log "cp -r $SRC_PATH $DST_PATH"
--    ;;
--esac
++
 +    http://*.bz2|https://*.bz2)
 +        log "Downloading BZip2 archive $SRC"
 +        exec_and_log "download_and_extract $SRC $DST_PATH.bz2 $BUNZIP2" \
 +            "Error downloading $SRC"
 +        ;;
- 
--exec_and_log "chmod a+rw $DST_PATH"
++
 +    http://*|https://)
 +        LOCATION=$(stratus-manifest --get-element location $SRC)
 +        rc=$?
@@ -158,10 +158,10 @@ index b54c826..d39b629 100755
 +                "Error downloading $SRC"
 +        fi
 +        ;;
- 
++
 +    pdisk:*)
 +        log "Persistent disk handling $SRC $DST"
-+        exec_and_log "$SSH -t -t $DST_HOST sudo /usr/sbin/attach-persistent-disk.sh $SRC $DST_PATH" \
++        exec_and_log "$SSH -t -t $DST_HOST /usr/sbin/attach-persistent-disk.sh $SRC $DST_PATH" \
 +            "Failed to create persistent disk $DST_PATH"
 +        ;;
 +
@@ -178,6 +178,7 @@ index b54c826..d39b629 100755
 +if [ -e $DST_PATH ] && [ ! -L $DST_PATH ]; then
 +  exec_and_log "chmod ug+rw,o-rwx $DST_PATH"
 +fi
+
 diff --git a/src/tm_mad/nfs/tm_context.sh b/src/tm_mad/nfs/tm_context.sh
 index f211024..ae44a47 100755
 --- a/src/tm_mad/nfs/tm_context.sh
@@ -236,7 +237,7 @@ index 58b1e28..c44e3a8 100755
 +exec_and_log "chmod ug+w,o-rwx $DST_PATH"
  
 diff --git a/src/tm_mad/ssh/tm_clone.sh b/src/tm_mad/ssh/tm_clone.sh
-index 71800d1..e26b8cf 100755
+index 71800d1..eaa5f93 100755
 --- a/src/tm_mad/ssh/tm_clone.sh
 +++ b/src/tm_mad/ssh/tm_clone.sh
 @@ -43,19 +43,51 @@ log "Creating directory $DST_DIR"
@@ -289,7 +290,7 @@ index 71800d1..e26b8cf 100755
 +    pdisk:*)
 +        log "Persistent disk handling $SRC $DST"
 +        DST_HOST=`arg_host $DST`
-+        exec_and_log "$SSH -t -t $DST_HOST sudo /usr/sbin/attach-persistent-disk.sh $SRC $DST_PATH" \
++        exec_and_log "$SSH -t -t $DST_HOST /usr/sbin/attach-persistent-disk.sh $SRC $DST_PATH" \
 +            "Failed to create persistent disk $DST_PATH"
 +        ;;
 +
