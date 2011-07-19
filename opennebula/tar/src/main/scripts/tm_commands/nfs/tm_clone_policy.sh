@@ -59,18 +59,10 @@ function _download_and_extract () {
         ;;
 
     http://*|https://)
-        IMAGE_IDENTIFIER=$(stratus-manifest --get-element identifier $SRC)
-        rc=$?
-        if [ "$rc" == "0" ] && [ -n "${IMAGE_IDENTIFIER}" ]; then
-            log "Image identifier from image manifest: ${IMAGE_IDENTIFIER}"
-            if [ -e "${STRATUS_POLICY}" ]; then
-                exec_and_log "stratus-policy-image ${IMAGE_IDENTIFIER} ${STRATUS_POLICY}"
-            else
-                error_message "Site policy isn't defined : ${STRATUS_POLICY} not such file or directory"
-                exit -1
-            fi
+        if [ -e "${STRATUS_POLICY}" ]; then
+            exec_and_log "stratus-policy-image $SRC ${STRATUS_POLICY}"
         else
-            error_message "image identifier not found in $SRC"
+            error_message "Site policy isn't defined : ${STRATUS_POLICY} no such file or directory"
             exit -1
         fi
         LOCATION=$(stratus-manifest --get-element location $SRC)
