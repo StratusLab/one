@@ -115,7 +115,7 @@ index 62c33fc..ac02b02 100755
 -    ;;
 +function _download_and_extract () {
 +    case $SRC in
-+    http://*.gz|https://*.gz)
++    http://*.gz|https://*.gz|ftp://*.gz)
 +        log "Downloading GZip archive $SRC"
 +        exec_and_log "download_and_extract $SRC $DST_PATH.gz $GUNZIP" \
 +            "Error downloading $SRC"
@@ -127,14 +127,14 @@ index 62c33fc..ac02b02 100755
 -        "Error copying $SRC to $DST"
 -    ;;
 -esac
-+    http://*.bz2|https://*.bz2)
++    http://*.bz2|https://*.bz2|ftp://*.bz2)
 +        log "Downloading BZip2 archive $SRC"
 +        exec_and_log "download_and_extract $SRC $DST_PATH.bz2 $BUNZIP2" \
 +            "Error downloading $SRC"
 +        ;;
  
 -exec_and_log "chmod a+rw $DST_PATH"
-+    http://*|https://)
++    http://*|https://*|ftp://*)
 +        LOCATION=$(stratus-manifest --get-element location $SRC)
 +        rc=$?
 +        if [ "$rc" == "0" ] && [ -n "$LOCATION" ]; then
@@ -250,19 +250,19 @@ index 71800d1..e26b8cf 100755
 -exec_and_log "$SSH $DST_HOST chmod a+rw $DST_PATH"
 +function _download_and_extract () {
 +    case $SRC in
-+    http://*.gz|https://*.gz)
++    http://*.gz|https://*.gz|ftp://*.gz)
 +        log "Downloading GZip archive $SRC"
 +        exec_and_log "download_and_extract $SRC $DST_PATH.gz $GUNZIP $DST_HOST" \
 +            "Error downloading $SRC"
 +        ;;
 +
-+    http://*.bz2|https://*.bz2)
++    http://*.bz2|https://*.bz2|ftp://*.bz2)
 +        log "Downloading BZip2 archive $SRC"
 +        exec_and_log "download_and_extract $SRC $DST_PATH.bz2 $BUNZIP2 $DST_HOST" \
 +            "Error downloading $SRC"
 +        ;;
 +
-+    http://*|https://)
++    http://*|https://*|ftp://*)
 +        LOCATION=$(stratus-manifest --get-element location $SRC)
 +        rc=$?
 +        if [ "$rc" == "0" ] && [ -n "$LOCATION" ]; then
