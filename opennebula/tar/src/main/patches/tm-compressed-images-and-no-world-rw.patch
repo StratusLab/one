@@ -138,11 +138,13 @@ index 62c33fc..3433700 100755
 +        exec_and_log "download_and_extract $SRC $DST_PATH.gz $GUNZIP" \
 +            "Error downloading $SRC"
 +        ;;
++
 +    http://*.bz2|https://*.bz2|ftp://*.bz2)
 +        log "Downloading BZip2 archive $SRC"
 +        exec_and_log "download_and_extract $SRC $DST_PATH.bz2 $BUNZIP2" \
 +            "Error downloading $SRC"
 +        ;;
++
 +    http://*|https://*|ftp://*)
 +        LOCATION=$(stratus-manifest --get-element location $SRC)
 +        rc=$?
