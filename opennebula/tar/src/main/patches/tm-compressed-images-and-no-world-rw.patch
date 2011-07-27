@@ -107,7 +107,7 @@ index 62c33fc..06e7b19 100755
 +DST_HOST=`arg_host $DST`
 +DST_DIR=`dirname $DST_PATH`
 +
-+VM_DIR=`dirname $SRC_PATH`
++VM_DIR=$(dirname $(dirname $DST))
 +VM_ID=`basename $VM_DIR`
 +
  fix_paths
@@ -255,7 +255,7 @@ index 71800d1..a3e51e2 100755
  SRC_HOST=`arg_host $SRC`
  DST_HOST=`arg_host $DST`
  
-+VM_DIR=`dirname $SRC_PATH`
++VM_DIR=$(dirname $(dirname $DST))
 +VM_ID=`basename $VM_DIR`
  
  log_debug "$1 $2"

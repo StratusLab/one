@@ -39,6 +39,9 @@ log_debug "DST: $DST_PATH"
 
 DST_DIR=`dirname $DST_PATH`
 
+VM_DIR=$(dirname $(dirname $DST))
+VM_ID=$(basename $VM_DIR)
+
 log "Creating directory $DST_DIR"
 exec_and_log "$SSH $DST_HOST mkdir -p $DST_DIR" \
     "Error creating directory $DST_DIR"
@@ -79,10 +82,13 @@ function _download_and_extract () {
         ;;
 
     pdisk:*)
+        PORTAL=`echo $SRC | cut -d ':' -f 2`
+        DISK_UUID=`echo $SRC | cut -d ':' -f 3`
         log "Persistent disk handling $SRC $DST"
-        DST_HOST=`arg_host $DST`
-        exec_and_log "$SSH -t -t $DST_HOST sudo /usr/sbin/attach-persistent-disk.sh $SRC $DST_PATH" \
-            "Failed to create persistent disk $DST_PATH"
+        exec_and_log "$SSH -t -t $DST_HOST /usr/sbin/attach-persistent-disk.sh $SRC $DST_PATH" \
+            "Failed to clone persistent disk $DST_PATH"
+        exec_and_log "python /var/share/stratuslab/creation/pdisk-registrar.py -n $DST_HOST -u $DISK_UUID -p $PORTAL $VM_ID" \
+           "Failed to write persistent disk properties"
         ;;
 
     *)

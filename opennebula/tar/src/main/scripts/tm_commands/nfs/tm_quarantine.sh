@@ -62,10 +62,6 @@ QUARANTINE_DIR=$QUARANTINE_DIR/quarantine
 # Original directory with VM files.  Essentially: $SRC_PATH/../.
 SRC_DIR=`dirname $SRC_PATH`
 
-# Check for persistent disks.
-log "info: checking for persistent disks ($SRC_HOST, $SRC_DIR)" 
-exec_and_log "ssh -t -t $SRC_HOST sudo /usr/sbin/detach-persistent-disk.sh $SRC_DIR"
-
 # Log what is going to be done. 
 log "info: beginning to move files to quarantine ($SRC_DIR, $QUARANTINE_DIR)" 
 
