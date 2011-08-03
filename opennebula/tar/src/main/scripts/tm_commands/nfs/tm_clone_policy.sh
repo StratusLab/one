@@ -41,10 +41,6 @@ log_debug "DST: $DST_PATH"
 DST_HOST=`arg_host $DST`
 DST_DIR=`dirname $DST_PATH`
 
-VM_DIR=$(dirname $(dirname $DST))
-VM_ID=$(basename $VM_DIR)
-
-
 log "Creating directory $DST_DIR"
 exec_and_log "mkdir -p $DST_DIR"
 exec_and_log "chmod ug+w,o-rwx $DST_DIR"
@@ -89,8 +85,6 @@ function _download_and_extract () {
         log "Persistent disk handling $SRC $DST"
         exec_and_log "$SSH -t -t $DST_HOST /usr/sbin/attach-persistent-disk.sh $SRC $DST_PATH" \
             "Failed to clone persistent disk $DST_PATH"
-        exec_and_log "python /var/share/stratuslab/creation/pdisk-registrar.py -n $DST_HOST -u $DISK_UUID -p $PORTAL $VM_ID" \
-           "Failed to write persistent disk properties"
         ;;
 
     *)
