@@ -63,7 +63,7 @@ QUARANTINE_DIR=$QUARANTINE_DIR/quarantine
 SRC_DIR=`dirname $SRC_PATH`
 
 # Detach persistent disk
-/usr/sbin/detach-persistent-disk.sh $SRC_DIR
+$SSH $SRC_HOST /usr/sbin/detach-persistent-disk.sh $SRC_DIR
 
 # Log what is going to be done. 
 log "info: beginning to move files to quarantine ($SRC_DIR, $QUARANTINE_DIR)" 
