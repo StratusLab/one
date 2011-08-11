@@ -109,6 +109,15 @@
     </fileSet>
 
     <fileSet>
+      <outputDirectory>/usr/share/one/hooks</outputDirectory>
+      <fileMode>755</fileMode>
+      <directory>src/main/hooks</directory>
+      <includes>
+	<include>**/*</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
       <outputDirectory>/etc/one</outputDirectory>
       <fileMode>644</fileMode>
       <directory>src/main/share</directory>
