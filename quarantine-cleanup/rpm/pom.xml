@@ -2,9 +2,7 @@
          
   <modelVersion>4.0.0</modelVersion>
   
-  <groupId>eu.stratuslab.pkgs</groupId>
   <artifactId>quarantine-cleanup-rpm</artifactId>  
-  <version>0.1.7-SNAPSHOT</version>
   <name>Quarantine Cleanup (RPM)</name>
 
   <packaging>rpm</packaging>
