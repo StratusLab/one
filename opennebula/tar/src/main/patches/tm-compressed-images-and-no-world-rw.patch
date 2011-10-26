@@ -30,20 +30,20 @@ index ea98602..3f68e83 100755
 +exec_and_log "ssh $DST_HOST chmod ug+w,o-rwx $DST_PATH"
  
 diff --git a/src/mad/sh/scripts_common.sh b/src/mad/sh/scripts_common.sh
-index 3d59047..6ac998e 100755
+index 61ba330..7859832 100755
 --- a/src/mad/sh/scripts_common.sh
 +++ b/src/mad/sh/scripts_common.sh
-@@ -32,6 +32,9 @@ SED=/bin/sed
- SSH=/usr/bin/ssh
+@@ -34,6 +34,9 @@ SSH=/usr/bin/ssh
  SUDO=/usr/bin/sudo
  WGET=/usr/bin/wget
+ READLINK=/bin/readlink
 +CURL=/usr/bin/curl
 +GUNZIP=/bin/gunzip
 +BUNZIP2=/bin/bunzip2
  
  # Used for log messages
  SCRIPT_NAME=`basename $0`
-@@ -145,3 +148,19 @@ function timeout_exec_and_log
+@@ -147,3 +150,19 @@ function timeout_exec_and_log
          exit $CMD_CODE
      fi
  }
@@ -64,7 +64,7 @@ index 3d59047..6ac998e 100755
 +}
 +
 diff --git a/src/tm_mad/lvm/tm_context.sh b/src/tm_mad/lvm/tm_context.sh
-index ee7fd40..887d978 100755
+index 6d6aea0..78f527f 100755
 --- a/src/tm_mad/lvm/tm_context.sh
 +++ b/src/tm_mad/lvm/tm_context.sh
 @@ -62,6 +62,7 @@ for f in $SRC; do
@@ -97,7 +97,7 @@ index 046a277..17a0a6e 100755
 +exec_and_log "$SSH $DST_HOST chmod ug+w,o-rwx $DST_PATH"
  
 diff --git a/src/tm_mad/nfs/tm_clone.sh b/src/tm_mad/nfs/tm_clone.sh
-index 62c33fc..a80a83c 100755
+index 62c33fc..10d4b8f 100755
 --- a/src/tm_mad/nfs/tm_clone.sh
 +++ b/src/tm_mad/nfs/tm_clone.sh
 @@ -32,30 +32,64 @@ get_vmdir
@@ -113,7 +113,7 @@ index 62c33fc..a80a83c 100755
  log_debug "DST: $DST_PATH"
  
 -DST_DIR=`dirname $DST_PATH`
- 
+-
  log "Creating directory $DST_DIR"
  exec_and_log "mkdir -p $DST_DIR"
 -exec_and_log "chmod a+w $DST_DIR"
@@ -182,12 +182,13 @@ index 62c33fc..a80a83c 100755
 +if [ -e $DST_PATH ] && [ ! -L $DST_PATH ]; then
 +  exec_and_log "chmod ug+rw,o-rwx $DST_PATH"
 +fi
-
++
+ 
 diff --git a/src/tm_mad/nfs/tm_context.sh b/src/tm_mad/nfs/tm_context.sh
-index f211024..ae44a47 100755
+index c21b00f..455384e 100755
 --- a/src/tm_mad/nfs/tm_context.sh
 +++ b/src/tm_mad/nfs/tm_context.sh
-@@ -62,6 +62,8 @@ done
+@@ -65,6 +65,8 @@ done
  exec_and_log "$MKISOFS -o $DST_PATH -J -R $ISO_DIR" \
      "Error creating iso fs"
  
@@ -241,18 +242,10 @@ index 58b1e28..c44e3a8 100755
 +exec_and_log "chmod ug+w,o-rwx $DST_PATH"
  
 diff --git a/src/tm_mad/ssh/tm_clone.sh b/src/tm_mad/ssh/tm_clone.sh
-index 71800d1..7cb067e 100755
+index 71800d1..f375c08 100755
 --- a/src/tm_mad/ssh/tm_clone.sh
 +++ b/src/tm_mad/ssh/tm_clone.sh
-@@ -33,7 +33,6 @@ DST_PATH=`arg_path $DST`
- SRC_HOST=`arg_host $SRC`
- DST_HOST=`arg_host $DST`
- 
--
- log_debug "$1 $2"
- log_debug "DST: $DST_PATH"
- 
-@@ -43,19 +42,50 @@ log "Creating directory $DST_DIR"
+@@ -43,19 +43,50 @@ log "Creating directory $DST_DIR"
  exec_and_log "$SSH $DST_HOST mkdir -p $DST_DIR" \
      "Error creating directory $DST_DIR"
  
@@ -319,10 +312,10 @@ index 71800d1..7cb067e 100755
 +fi
  
 diff --git a/src/tm_mad/ssh/tm_context.sh b/src/tm_mad/ssh/tm_context.sh
-index 322ebda..bdff870 100755
+index f0f2f8f..9166e6b 100755
 --- a/src/tm_mad/ssh/tm_context.sh
 +++ b/src/tm_mad/ssh/tm_context.sh
-@@ -66,6 +66,7 @@ done
+@@ -69,6 +69,7 @@ done
  
  exec_and_log "$MKISOFS -o $TMP_DIR/$DST_FILE -J -R $ISO_DIR" \
      "Error creating iso fs"
@@ -331,25 +324,24 @@ index 322ebda..bdff870 100755
      "Error copying $TMP_DIR/$DST_FILE to $DST"
  exec_and_log "rm -rf $TMP_DIR" \
 diff --git a/src/tm_mad/ssh/tm_mkimage.sh b/src/tm_mad/ssh/tm_mkimage.sh
-index 81ff20f..63aefe3 100755
+index 81ff20f..609e83b 100755
 --- a/src/tm_mad/ssh/tm_mkimage.sh
 +++ b/src/tm_mad/ssh/tm_mkimage.sh
-@@ -38,4 +38,5 @@ exec_and_log "$SSH $DST_HOST $DD if=/dev/zero of=$DST_PATH bs=1 count=1 seek=${S
+@@ -38,4 +38,4 @@ exec_and_log "$SSH $DST_HOST $DD if=/dev/zero of=$DST_PATH bs=1 count=1 seek=${S
      "Could not create image $DST_PATH"
  exec_and_log "$SSH $DST_HOST $MKFS -t $FSTYPE -F $DST_PATH" \
      "Unable to create filesystem $FSTYPE in $DST_PATH"
 -exec_and_log "$SSH $DST_HOST chmod a+rw $DST_PATH"
 \ No newline at end of file
 +exec_and_log "$SSH $DST_HOST chmod ug+rw,o-rwx $DST_PATH"
-+
 diff --git a/src/tm_mad/ssh/tm_mkswap.sh b/src/tm_mad/ssh/tm_mkswap.sh
-index 6070513..5379eb9 100755
+index 6070513..27f56a5 100755
 --- a/src/tm_mad/ssh/tm_mkswap.sh
 +++ b/src/tm_mad/ssh/tm_mkswap.sh
-@@ -41,5 +41,5 @@ log "Initializing swap space"
+@@ -41,5 +41,4 @@ log "Initializing swap space"
  exec_and_log "$SSH $DST_HOST $MKSWAP $DST_PATH" \
      "Could not create swap on $DST_PATH"
  
 -exec_and_log "$SSH $DST_HOST chmod a+w $DST_PATH"
+-
 +exec_and_log "$SSH $DST_HOST chmod ug+w,o-rwx $DST_PATH"
- 

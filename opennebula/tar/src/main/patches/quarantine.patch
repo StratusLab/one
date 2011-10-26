@@ -1,8 +1,8 @@
 diff --git a/src/tm_mad/nfs/tm_nfs.conf b/src/tm_mad/nfs/tm_nfs.conf
-index 5158752..ec1397e 100644
+index bb980d7..2741059 100644
 --- a/src/tm_mad/nfs/tm_nfs.conf
 +++ b/src/tm_mad/nfs/tm_nfs.conf
-@@ -2,6 +2,6 @@ CLONE   = nfs/tm_clone.sh
+@@ -18,6 +18,6 @@ CLONE   = nfs/tm_clone.sh
  LN      = nfs/tm_ln.sh
  MKSWAP  = nfs/tm_mkswap.sh
  MKIMAGE = nfs/tm_mkimage.sh

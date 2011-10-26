@@ -1,8 +1,8 @@
-diff --git a/src/vmm_mad/ssh/vmm_ssh_kvm.conf b/src/vmm_mad/ssh/vmm_ssh_kvm.conf
-index af6920d..f9dacbb 100644
---- a/src/vmm_mad/ssh/vmm_ssh_kvm.conf
-+++ b/src/vmm_mad/ssh/vmm_ssh_kvm.conf
-@@ -30,7 +30,7 @@
+diff --git a/src/vmm_mad/exec/vmm_exec_kvm.conf b/src/vmm_mad/exec/vmm_exec_kvm.conf
+index 949eae1..c25c1a7 100644
+--- a/src/vmm_mad/exec/vmm_exec_kvm.conf
++++ b/src/vmm_mad/exec/vmm_exec_kvm.conf
+@@ -31,7 +31,7 @@
  #VCPU = 1
  #MEMORY =  128
  
@@ -10,4 +10,4 @@ index af6920d..f9dacbb 100644
 +OS       = [ boot = "hd", arch = "x86_64" ]
  FEATURES = [ PAE = "no", ACPI = "yes" ]
  
- DISK     = [ driver = "raw" ]
+ DISK     = [ driver = "raw" , cache = "default"]
