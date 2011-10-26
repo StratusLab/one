@@ -2,7 +2,7 @@
          
   <modelVersion>4.0.0</modelVersion>
   
-  <artifactId>one-2.2-StratusLab</artifactId>  
+  <artifactId>one-3.0-StratusLab</artifactId>  
   <name>OpenNebula (POM)</name>
 
   <packaging>pom</packaging>
