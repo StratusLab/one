@@ -65,6 +65,11 @@ SRC_DIR=`dirname $SRC_PATH`
 # Detach persistent disk
 $SSH $SRC_HOST /usr/sbin/detach-persistent-disk.sh $SRC_DIR
 
+# Update the storage service
+log "Setting persistent disk for quarantine $SRC_PATH"
+exec_and_log "stratus-storage-quarantine $PDISKID \
+    "Error setting persistent disk quarantine $SRC_PATH"
+
 # Log what is going to be done. 
 log "info: beginning to move files to quarantine ($SRC_DIR, $QUARANTINE_DIR)" 
 
