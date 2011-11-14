@@ -131,7 +131,7 @@
       <fileMode>755</fileMode>
       <directory>src/main/scripts/tm_commands</directory>
       <includes>
-	<include>**/*</include>
+      	<include>**/*</include>
       </includes>
     </fileSet>
 
