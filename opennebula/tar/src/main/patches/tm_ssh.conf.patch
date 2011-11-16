@@ -1,0 +1,18 @@
+diff --git a/src/tm_mad/ssh/tm_ssh.conf b/src/tm_mad/ssh/tm_ssh.conf
+index f4e0f40..246c785 100755
+--- a/src/tm_mad/ssh/tm_ssh.conf
++++ b/src/tm_mad/ssh/tm_ssh.conf
+@@ -14,10 +14,10 @@
+ # limitations under the License.                                             #
+ #--------------------------------------------------------------------------- #
+ 
+-CLONE   = ssh/tm_clone.sh
++CLONE   = ssh/tm_clone_cache.sh
+ LN      = ssh/tm_ln.sh
+ MKSWAP  = ssh/tm_mkswap.sh
+ MKIMAGE = ssh/tm_mkimage.sh
+-DELETE  = ssh/tm_delete.sh
++DELETE  = ssh/tm_quarantine.sh
+-MV      = ssh/tm_mv.sh
++MV      = ssh/tm_save_cache.sh
+ CONTEXT = ssh/tm_context.sh

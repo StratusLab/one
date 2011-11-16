@@ -40,10 +40,9 @@ IMAGEID=${SRC##*/}
 IDENTIFIER=$(stratus-policy-image $SRC)
 
 PDISKPORT=8445
-export STRATUSLAB_PDISK_ENDPOINT=`stratus-config persistent_disk_ip`
+export STRATUSLAB_PDISK_ENDPOINT=$(stratus-config persistent_disk_ip)
 
-VG=vg.01
-VGPATH=/dev/$VG
+VGPATH=$(stratus-config persistent_disk_lvm_device)
 TMPSTORE=/tmp
 
 log "Get PDISK ID from cache."
@@ -96,7 +95,11 @@ if [ "$?" -eq "0" ];then
         IMAGESIZE_G=$(echo "$IMAGESIZE_b/1024^3 + 1" | bc)
 
         # This new LV should never be shared by iSCSI server.
-        PDISKID=$(stratus-storage -s ${IMAGESIZE_G} -t $IMAGEID | cut -d' ' -f 2)
+        PDISKID=$(stratus-storage -s $IMAGESIZE_G -t $IMAGEID | cut -d' ' -f 2)
+        # Define tag the base image as the above one -t doesn't work
+        exec_and_log "stratus-storage-update $PDISKID tag $IMAGEID" \
+             "Failed updating tag for $PDISKID disk"
+
         # this should go.
         sudo chmod 777 $VGPATH/$PDISKID
 
@@ -118,18 +121,17 @@ fi
 log "PDISK ID $PDISKID for IMAGEID $IMAGEID"
 
 log "Requesting snapshot disk of the origin: $PDISKID"
-output=$(stratus-storage --cow $PDISKID -t $PDISKID)
+output=$(stratus-storage --cow $PDISKID -t $IMAGEID)
 [ "$?" != "0" ] && exit 1
 PDISKID_COW=$(echo $output | cut -d' ' -f 2)
-log "Snapshot disk created: $PDISKID_COW"
-
-# Define tag for the snapshot
-exec_and_log "stratus-storage-update $PDISKID tag snapshot:$PDISKID" \
+# Define tag for the snapshot as the above -t doesn't work
+exec_and_log "stratus-storage-update $PDISKID_COW tag snapshot:$PDISKID" \
      "Failed updating the disk storage"
+log "Snapshot disk created: $PDISKID_COW"
 
 INSTANCEID=$(basename $(dirname $(dirname $DST_PATH)))
 USER=$(onevm list | awk '/one-'$INSTANCEID'/ {print $2}')
-exec_and_log "stratus-storage-update $PDISKID owner $USER" \
+exec_and_log "stratus-storage-update $PDISKID_COW owner $USER" \
      "Failed updating the disk storage"
 
 exec_and_log "stratus-storage-update $PDISKID isreadonly true" \
