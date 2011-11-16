@@ -71,12 +71,10 @@ CREATE_IMAGE=$(onevm show $INSTANCEID 2>/dev/null | awk '/CREATE_IMAGE/,/\]/' 2>
 
 # Find a way to source this from somewhere.
 PDISKPORT=8445
-export STRATUSLAB_PDISK_ENDPOINT=62.217.120.135
-export STRATUSLAB_PDISK_USERNAME=oneadmin
-export STRATUSLAB_PDISK_PASSWORD=oneadmin
+export STRATUSLAB_PDISK_ENDPOINT=$(stratus-config persistent_disk_ip)
 
-VG=vg.01
-VGDIR=/dev/$VG
+VGDIR=$(stratus-config persistent_disk_lvm_device)
+VG=$(basename $VGDIR)
 TMPSTORE=/tmp
 
 # Rocover PDISK ID of disk.0 assuming SRC_PATH is in a form /path/ID/images/disk.X
@@ -102,7 +100,7 @@ print ManifestIdentifier().sha1ToIdentifier('$SHA1')")
 
 # Determine the size of the LV that should hold the new image.
 cmd="ssh -t -t $STRATUSLAB_PDISK_ENDPOINT sudo lvs --noheading -o lv_size --units G $SNAPSHOT_LV"
-PDISKID_SIZE=$($cmd)
+PDISKID_SIZE=$($cmd | tr -d '\r')
 IMAGESIZE_G=$(echo ${PDISKID_SIZE}|cut -d'.' -f1)
 
 
@@ -117,10 +115,13 @@ IMAGESIZE_G=$(echo ${PDISKID_SIZE}|cut -d'.' -f1)
 #$SSH $STRATUSLAB_PDISK_ENDPOINT sudo lvremove -f $SNAPSHOT_LV || \
 #   { sleep 5; $SSH $STRATUSLAB_PDISK_ENDPOINT sudo lvremove -f $SNAPSHOT_LV; }
 
-PDISKID_NEW=$(stratus-storage --rebase $PDISKID_DISK0 | cut -d' ' -f2)
+log "Requesting rebase of the snapshot: $PDISKID_DISK0"
+output=$(stratus-storage --rebase $PDISKID_DISK0)
+[ "$?" != "0" ] && exit 1
+PDISKID_NEW=$(echo $output | cut -d' ' -f 2)
 
 ## Build manifest for new image.
-#trap "rm -rf ${P12CERT}* ${MANIFEST_DIR}" EXIT
+trap "rm -rf ${P12CERT}* ${MANIFEST_DIR}" EXIT
 
 P12CERT=$(mktemp --tmpdir=$HOME --suffix=.p12 certXXXX)
 P12PASS=$RANDOM
@@ -166,7 +167,7 @@ ManifestInfo.IMAGE_VALIDITY = int('$IMAGE_VALIDITY_HOURS') * 3600
 ch = ConfigHolder()
 ch.username='foo'
 ch.password='bar'
-ch.endpoint='toto'
+ch.endpoint='baz'
 ch.verboseLevel = '3'
 ch.p12Certificate = '$P12CERT'
 ch.p12Password = '$P12PASS'

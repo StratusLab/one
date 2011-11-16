@@ -40,10 +40,9 @@ IMAGEID=${SRC##*/}
 IDENTIFIER=$(stratus-policy-image $SRC)
 
 PDISKPORT=8445
-export STRATUSLAB_PDISK_ENDPOINT=`stratus-config persistent_disk_ip`
+export STRATUSLAB_PDISK_ENDPOINT=$(stratus-config persistent_disk_ip)
 
-VG=vg.01
-VGPATH=/dev/$VG
+VGPATH=$(stratus-config persistent_disk_lvm_device)
 TMPSTORE=/tmp
 
 log "Get PDISK ID from cache."
