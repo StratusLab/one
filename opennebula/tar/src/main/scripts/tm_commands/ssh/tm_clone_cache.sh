@@ -1,4 +1,4 @@
-#!/bin/bash -xe
+#!/bin/bash
 
 # -------------------------------------------------------------------------- #
 # Copyright 2002-2011, OpenNebula Project Leads (OpenNebula.org)             #
@@ -37,7 +37,9 @@ log "Applying policy on $SRC"
 IMAGEID=${SRC##*/}
 
 # Retrieve the first fully qualified validated MP identifier 
-IDENTIFIER=$(stratus-policy-image $SRC)
+output=
+exec_and_log "stratus-policy-image $SRC" "Failed policy validation" true
+IDENTIFIER=$output
 
 PDISKPORT=8445
 export STRATUSLAB_PDISK_ENDPOINT=$(stratus-config persistent_disk_ip)
@@ -98,7 +100,7 @@ if [ "$?" -eq "0" ];then
         PDISKID=$(stratus-storage -s $IMAGESIZE_G -t $IMAGEID | cut -d' ' -f 2)
         # Define tag the base image as the above one -t doesn't work
         exec_and_log "stratus-storage-update $PDISKID tag $IMAGEID" \
-             "Failed updating tag for $PDISKID disk"
+             "Failed updating tag for $PDISKID disk" true
 
         # this should go.
         sudo chmod 777 $VGPATH/$PDISKID
@@ -126,33 +128,30 @@ output=$(stratus-storage --cow $PDISKID -t $IMAGEID)
 PDISKID_COW=$(echo $output | cut -d' ' -f 2)
 # Define tag for the snapshot as the above -t doesn't work
 exec_and_log "stratus-storage-update $PDISKID_COW tag snapshot:$PDISKID" \
-     "Failed updating the disk storage"
+     "Failed updating the disk storage" true
 log "Snapshot disk created: $PDISKID_COW"
 
 INSTANCEID=$(basename $(dirname $(dirname $DST_PATH)))
-USER=$(onevm list | awk '/one-'$INSTANCEID'/ {print $2}')
+log "$(onevm list)"
+USER=$(onevm list | awk '/^[ \t]*'$INSTANCEID' / {print $2}')
 exec_and_log "stratus-storage-update $PDISKID_COW owner $USER" \
-     "Failed updating the disk storage"
+     "Failed updating the disk storage" true
 
 exec_and_log "stratus-storage-update $PDISKID isreadonly true" \
-     "Failed updating the disk storage"
+     "Failed updating the disk storage" true
 
 PDISKID_COW_URL=pdisk:$STRATUSLAB_PDISK_ENDPOINT:$PDISKPORT:$PDISKID_COW
-
-log_debug "$1 $2"
-log_debug "DST: $DST_PATH"
 
 DST_DIR=`dirname $DST_PATH`
 
 log "creating directory $DST_DIR"
-$SSH $DST_HOST ls -al $DST_DIR/.. || true
 exec_and_log "$SSH -t -t $DST_HOST mkdir -p $DST_DIR" \
-    "error creating directory $DST_DIR"
+    "error creating directory $DST_DIR" true
 
 log "Persistent disk handling $PDISKID_COW_URL $DST"
 exec_and_log "$SSH -t -t $DST_HOST /usr/sbin/attach-persistent-disk.sh $PDISKID_COW_URL $DST_PATH" \
-    "Failed to attach persistent disk $DST_PATH"
+    "Failed to attach persistent disk $DST_PATH" true
 
 if [ ! -L $DST_PATH ]; then
-  exec_and_log "$SSH -t -t $DST_HOST sudo chmod --quiet ug+w,o-rwx $DST_PATH"
+  exec_and_log "$SSH -t -t $DST_HOST sudo chmod --quiet ug+w,o-rwx $DST_PATH" true
 fi
