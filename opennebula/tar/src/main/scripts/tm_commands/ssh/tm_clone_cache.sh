@@ -132,7 +132,7 @@ exec_and_log "stratus-storage-update $PDISKID_COW tag snapshot:$PDISKID" \
 log "Snapshot disk created: $PDISKID_COW"
 
 INSTANCEID=$(basename $(dirname $(dirname $DST_PATH)))
-log "$(onevm list)"
+log "Get instance owner."
 USER=$(onevm list | awk '/^[ \t]*'$INSTANCEID' / {print $2}')
 exec_and_log "stratus-storage-update $PDISKID_COW owner $USER" \
      "Failed updating the disk storage" true
