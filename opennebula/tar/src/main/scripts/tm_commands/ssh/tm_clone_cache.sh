@@ -108,7 +108,8 @@ if [ "$?" -eq "0" ];then
         if [[ $IMAGEFORMAT == qco* ]]; then
             # qcow image can be put on LV as is w/o conversion to raw. Test this.
             # Though this probably will not work with create-image.
-            $SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sudo qemu-img convert -O raw $IMAGE_LOCAL $VGPATH/$PDISKID
+            exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sudo qemu-img convert -O raw $IMAGE_LOCAL $VGPATH/$PDISKID" \
+                "Failed to convert qcow image to raw." true
         else
             #$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sudo sh -c "$uncompress -c $IMAGE_LOCAL > $VGPATH/$PDISKID"
             sudo sh -c "$uncompress -c $IMAGE_LOCAL > $VGPATH/$PDISKID"
