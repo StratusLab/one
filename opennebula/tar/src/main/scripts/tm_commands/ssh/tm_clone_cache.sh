@@ -48,7 +48,7 @@ VGPATH=$(stratus-config persistent_disk_lvm_device)
 TMPSTORE=/tmp
 
 log "Get PDISK ID from cache."
-# NB! there are cases when describe-volumes returns more than one PDISK ID!
+# NB! search may return more than one PDISK ID as the tag in not unique!
 PDISKID=$(stratus-storage-search tag $IMAGEID) 
 if [ "$?" -eq "0" ];then 
     if [ -z "$PDISKID" ]; then
@@ -57,8 +57,19 @@ if [ "$?" -eq "0" ];then
 
         IMAGELOCATION=$(stratus-manifest --get-element location $IDENTIFIER)
 
+        # Scritical section - start.
+        # Image and its stored copy have to be deleted if something goes wrong.
+        # See blow fo the end of the critical section.
+        PDISKID=
+        function onexit() {
+            $SSH -t -t $STRATUSLAB_PDISK_ENDPOINT rm -f $IMAGE_LOCAL
+            [ -n "$PDISKID" ] && stratus-storage-delete $PDISKID
+        }
+        trap onexit EXIT
+
         IMAGE_LOCAL=$TMPSTORE/$(date +%s).${IMAGELOCATION##*/}
-        $SSH -t -t $STRATUSLAB_PDISK_ENDPOINT curl -o $IMAGE_LOCAL $IMAGELOCATION
+        exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT curl -o $IMAGE_LOCAL $IMAGELOCATION" \
+            "Failed to download $IMAGELOCATION" true
 
         IMAGECOMPRESS=$(stratus-manifest --get-element compression $IDENTIFIER)
         uncompress=
@@ -97,13 +108,7 @@ if [ "$?" -eq "0" ];then
         IMAGESIZE_G=$(echo "$IMAGESIZE_b/1024^3 + 1" | bc)
 
         # This new LV should never be shared by iSCSI server.
-        PDISKID=$(stratus-storage -s $IMAGESIZE_G -t $IMAGEID | cut -d' ' -f 2)
-        # Define tag the base image as the above one -t doesn't work
-        exec_and_log "stratus-storage-update $PDISKID tag $IMAGEID" \
-             "Failed updating tag for $PDISKID disk" true
-
-        # this should go.
-        sudo chmod 777 $VGPATH/$PDISKID
+        PDISKID=$(stratus-storage -s $IMAGESIZE_G | cut -d' ' -f 2)
 
         if [[ $IMAGEFORMAT == qco* ]]; then
             # qcow image can be put on LV as is w/o conversion to raw. Test this.
@@ -115,7 +120,12 @@ if [ "$?" -eq "0" ];then
                 "Failed to uncompress the image to Logical Volume" true
         fi
 
-        rm -f $IMAGE_LOCAL
+        trap - EXIT
+        # Scritical section - end.
+
+        # Define tag the base image
+        exec_and_log "stratus-storage-update $PDISKID tag $IMAGEID" \
+             "Failed updating tag for $PDISKID disk" true
     fi
 else
     log "Failed to get PDISK ID for image id: $IMAGEID"
