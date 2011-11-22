@@ -57,7 +57,7 @@ if [ "$?" -eq "0" ];then
 
         IMAGELOCATION=$(stratus-manifest --get-element location $IDENTIFIER)
 
-        # Scritical section - start.
+        # Critical section - start.
         # Image and its stored copy have to be deleted if something goes wrong.
         # See blow fo the end of the critical section.
         PDISKID=
@@ -121,7 +121,7 @@ if [ "$?" -eq "0" ];then
         fi
 
         trap - EXIT
-        # Scritical section - end.
+        # Critical section - end.
 
         # Define tag the base image
         exec_and_log "stratus-storage-update $PDISKID tag $IMAGEID" \
@@ -133,9 +133,18 @@ else
 fi
 log "PDISK ID $PDISKID for IMAGEID $IMAGEID"
 
+# Critical section - start.
+# Delete COW snapshot on any failure.
+PDISKID_COW=
+function onexit() {
+    [ -n "$PDISKID_COW" ] && stratus-storage-delete $PDISKID_COW
+}
+trap onexit EXIT
+
 log "Requesting snapshot disk of the origin: $PDISKID"
-output=$(stratus-storage --cow $PDISKID -t $IMAGEID)
-[ "$?" != "0" ] && exit 1
+output=
+exec_and_log "stratus-storage --cow $PDISKID -t $IMAGEID" \
+    "Failed to create snapshot of origin $PDISKID" true
 PDISKID_COW=$(echo $output | cut -d' ' -f 2)
 # Define tag for the snapshot as the above -t doesn't work
 exec_and_log "stratus-storage-update $PDISKID_COW tag snapshot:$PDISKID" \
@@ -162,6 +171,9 @@ exec_and_log "$SSH -t -t $DST_HOST mkdir -p $DST_DIR" \
 log "Persistent disk handling $PDISKID_COW_URL $DST"
 exec_and_log "$SSH -t -t $DST_HOST /usr/sbin/attach-persistent-disk.sh $PDISKID_COW_URL $DST_PATH" \
     "Failed to attach persistent disk $DST_PATH" true
+
+trap - EXIT
+# Critical section - end.
 
 if [ ! -L $DST_PATH ]; then
   exec_and_log "$SSH -t -t $DST_HOST sudo chmod --quiet ug+w,o-rwx $DST_PATH" true
