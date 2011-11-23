@@ -187,7 +187,6 @@ function start_from_cow_snapshot() {
 }
 
 function start_from_persisted() {
-    set -x
     INSTANCEID=$(basename $(dirname $(dirname $DST_PATH)))
     USER=$(onevm list | awk '/^[ \t]*'$INSTANCEID'/ {print $2}')
     PASS=$(awk -F= '/'$USER'/, sub(/\,.*/,"") {print $2}' /etc/stratuslab/authn/login-pswd.properties)
@@ -208,7 +207,6 @@ function start_from_persisted() {
         exec_and_log "/bin/false" \
             "Failed booting from $SRC. Check that you are the owner of the disk, the disk is not readonly and not a snapshot."
     fi
-    set +x
 }
 
 case $SRC in
