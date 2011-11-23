@@ -67,6 +67,8 @@ if [ "$?" -eq "0" ];then
         }
         trap onexit EXIT
 
+        set -e
+
         IMAGE_LOCAL=$TMPSTORE/$(date +%s).${IMAGELOCATION##*/}
         exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT curl -o $IMAGE_LOCAL $IMAGELOCATION" \
             "Failed to download $IMAGELOCATION" true
@@ -120,10 +122,12 @@ if [ "$?" -eq "0" ];then
                 "Failed to uncompress the image to Logical Volume" true
         fi
 
+        set +e
+
         trap - EXIT
         # Critical section - end.
 
-        # Define tag the base image
+        # Define tag for the base image (origin)
         exec_and_log "stratus-storage-update $PDISKID tag $IMAGEID" \
              "Failed updating tag for $PDISKID disk" true
     fi
@@ -140,6 +144,8 @@ function onexit() {
     [ -n "$PDISKID_COW" ] && stratus-storage-delete $PDISKID_COW
 }
 trap onexit EXIT
+
+set -e
 
 log "Requesting snapshot disk of the origin: $PDISKID"
 output=
@@ -172,9 +178,12 @@ log "Persistent disk handling $PDISKID_COW_URL $DST"
 exec_and_log "$SSH -t -t $DST_HOST /usr/sbin/attach-persistent-disk.sh $PDISKID_COW_URL $DST_PATH" \
     "Failed to attach persistent disk $DST_PATH" true
 
+set +e
+
 trap - EXIT
 # Critical section - end.
 
 if [ ! -L $DST_PATH ]; then
-  exec_and_log "$SSH -t -t $DST_HOST sudo chmod --quiet ug+w,o-rwx $DST_PATH" true
+  exec_and_log "$SSH -t -t $DST_HOST sudo /bin/chmod ug+w,o-rwx $DST_PATH" \
+      "Failed to change mode of $DST_PATH" true
 fi
