@@ -121,7 +121,10 @@ output=$(stratus-storage --rebase $PDISKID_DISK0)
 PDISKID_NEW=$(echo $output | cut -d' ' -f 2)
 
 ## Build manifest for new image.
-trap "rm -rf ${P12CERT}* ${MANIFEST_DIR}" EXIT
+function onexit() {
+    rm -rf ${P12CERT} ${MANIFEST_DIR}
+}
+trap onexit EXIT
 
 P12CERT=$(mktemp --tmpdir=$HOME --suffix=.p12 certXXXX)
 P12PASS=$RANDOM
