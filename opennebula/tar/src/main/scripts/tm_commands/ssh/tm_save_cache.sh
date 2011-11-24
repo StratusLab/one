@@ -37,8 +37,6 @@ DST_DIR=`dirname $DST_PATH`
 
 set -ex
 
-exec_and_log "env > /tmp/toto"
-
 # Check if we were called to create an image.
 INSTANCEID=$(basename $(dirname $(dirname $SRC_PATH)))
 CREATE_IMAGE=$(onevm show $INSTANCEID 2>/dev/null | awk '/CREATE_IMAGE/,/\]/' 2>/dev/null)
@@ -81,7 +79,7 @@ TMPSTORE=/tmp
 VM_DIR=$(dirname $(dirname $SRC_PATH))
 PDISK_INFO=$($SSH -q -t -t $SRC_HOST "source /etc/stratuslab/pdisk-host.cfg; head -1 $VM_DIR/\$REGISTER_FILENAME")
 # SSH adds carriage return
-PDISK_INFO=$(echo $PDISK_INFO|tr -d '\r')
+PDISK_INFO=$(echo $PDISK_INFO | tr -d '\r')
 PDISKID_DISK0=${PDISK_INFO##*:}
 PDISK_SERVICE_HOSTPORT=$(echo $PDISK_INFO|awk -F: '{print $2":"$3}')
 
@@ -92,16 +90,18 @@ SNAPSHOT_FILE=$VGDIR/$PDISKID_DISK0
 SNAPSHOT_LV=$VG/$PDISKID_DISK0
 
 # Calculate IMAGE ID and define it as TAG for create-volume.
-SHA1=$(sudo sha1sum ${SNAPSHOT_FILE}|cut -d' ' -f1)
+SHA1=$(sudo /usr/bin/sha1sum ${SNAPSHOT_FILE} | cut -d' ' -f1)
 IMAGEID=$(python -c "import sys
 sys.path.append('/var/lib/stratuslab/python/')
 from stratuslab.ManifestInfo import ManifestIdentifier
 print ManifestIdentifier().sha1ToIdentifier('$SHA1')")
 
+log "MANIFESTID $IMAGEID"
+
 # Determine the size of the LV that should hold the new image.
-cmd="ssh -t -t $STRATUSLAB_PDISK_ENDPOINT sudo lvs --noheading -o lv_size --units G $SNAPSHOT_LV"
-PDISKID_SIZE=$($cmd | tr -d '\r')
-IMAGESIZE_G=$(echo ${PDISKID_SIZE}|cut -d'.' -f1)
+PDISKID_SIZE=$($SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sudo /sbin/lvs --noheading -o lv_size --units G $SNAPSHOT_LV)
+PDISKID_SIZE=$(echo $PDISKID_SIZE | tr -d '\r')
+IMAGESIZE_G=$(echo $PDISKID_SIZE | cut -d'.' -f1)
 
 
 ## Request new volume for new image.
@@ -116,9 +116,10 @@ IMAGESIZE_G=$(echo ${PDISKID_SIZE}|cut -d'.' -f1)
 #   { sleep 5; $SSH $STRATUSLAB_PDISK_ENDPOINT sudo lvremove -f $SNAPSHOT_LV; }
 
 log "Requesting rebase of the snapshot: $PDISKID_DISK0"
-output=$(stratus-storage --rebase $PDISKID_DISK0)
-[ "$?" != "0" ] && exit 1
+output=$(stratus-storage --rebase $PDISKID_DISK0) || exit 1 
 PDISKID_NEW=$(echo $output | cut -d' ' -f 2)
+exec_and_log "stratus-storage-update $PDISKID_NEW tag $IMAGEID" \
+    "Failed to update tag on $PDISKID_NEW with $IMAGEID" true
 
 ## Build manifest for new image.
 function onexit() {
@@ -162,7 +163,7 @@ IMAGE_VALIDITY_HOURS=$(( 24 * $P12VALID ))
 PDISK_INFO_NEW="${PDISK_INFO%:*}:${PDISKID_NEW}"
 
 NOT_SET=""
-sudo python -c "import sys, os
+sudo /usr/bin/python -c "import sys, os
 sys.path.append('/var/lib/stratuslab/python/')
 from stratuslab.Creator import Creator
 from stratuslab.ConfigHolder import ConfigHolder
@@ -191,11 +192,15 @@ os.rename(c.manifestLocalFileName, '$MANIFEST_FILE')
 c.manifestLocalFileName = '$MANIFEST_FILE'
 c._signManifest()"
 
+sudo /bin/chmod 644 ${MANIFEST_FILE}*
+
 # Give a nicer name to origianl manifest.
-sudo cp -f ${MANIFEST_FILE}.orig $MANIFEST_FILE_NOTSIGNED
+cp -f ${MANIFEST_FILE}.orig $MANIFEST_FILE_NOTSIGNED
 
 # Upload manifest to MarketPlace
 stratus-upload-metadata --marketplace-endpoint=$ORIGIN_MARKETPLACE $MANIFEST_FILE
+
+log "marketplace $ORIGIN_MARKETPLACE $IMAGEID"
 
 # Send email to user
 if [ -n "$CREATOR_EMAIL" ]; then
@@ -213,7 +218,7 @@ The validity of the signing certificate is $P12VALID days.\n
 \n
 Cheers.\n"
     
-    echo -e $EMAIL_TEXT | sudo mail -s "New image created. Go and sign manifest." -a $MANIFEST_FILE_NOTSIGNED -r noreply@stratuslab.eu $CREATOR_EMAIL
+    echo -e $EMAIL_TEXT | mail -s "New image created. Go and sign manifest." -a $MANIFEST_FILE_NOTSIGNED -r noreply@stratuslab.eu $CREATOR_EMAIL
 else
     log "Fatal: Couldn't send email to the image creator. Creator email was not provided."
 fi
