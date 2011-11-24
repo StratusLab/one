@@ -125,7 +125,8 @@ trap "rm -rf ${P12CERT}* ${MANIFEST_DIR}" EXIT
 
 P12CERT=$(mktemp --tmpdir=$HOME --suffix=.p12 certXXXX)
 P12PASS=$RANDOM
-/home/happychuck/gen-p12-cert.sh $P12CERT $P12PASS 2
+P12VALID=2
+stratus-generate-p12 -o $P12CERT -v $P12VALID -p $P12PASS
 
 # Checksum new image. Create and sign manifest. 
 MANIFEST_DIR=$HOME/manifest$(date +%s)
@@ -153,7 +154,7 @@ for v in $VARS; do
   export $v
 done
 
-IMAGE_VALIDITY_HOURS=24
+IMAGE_VALIDITY_HOURS=$(( 24 * $P12VALID ))
 
 PDISK_INFO_NEW="${PDISK_INFO%:*}:${PDISKID_NEW}"
 
@@ -203,7 +204,9 @@ Alternatively, you can sign attached manifest and upload to Marketplace with:\n
 stratus-sign-metadata <manifest file>\n
 stratus-upload-metadata <manifest file>\n
 \n
-NB! The validity of the manifest was set to $IMAGE_VALIDITY_HOURS hours. Please change it.\n
+NB! The validity of the manifest is $IMAGE_VALIDITY_HOURS hours. Please change it!\n
+\n
+The validity of the signing certificate is $P12VALID days.\n
 \n
 Cheers.\n"
     
