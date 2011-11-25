@@ -189,7 +189,7 @@ function start_from_cow_snapshot() {
 function start_from_persisted() {
     INSTANCEID=$(basename $(dirname $(dirname $DST_PATH)))
     USER=$(onevm list | awk '/^[ \t]*'$INSTANCEID'/ {print $2}')
-    PASS=$(awk -F= '/'$USER'/, sub(/\,.*/,"") {print $2}' /etc/stratuslab/authn/login-pswd.properties)
+    PASS=$(awk -F= '/'$USER'/, sub(/\,.*/,"") {print $2; exit}' /etc/stratuslab/authn/login-pswd.properties)
 
     UUID=${SRC##*:}
     COW_FALSE=$(stratus-storage-search --pdisk-username $USER --pdisk-password $PASS iscow false)
