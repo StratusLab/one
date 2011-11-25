@@ -35,37 +35,11 @@ DST_HOST=`arg_host $DST`
 
 DST_DIR=`dirname $DST_PATH`
 
-set -ex
+set -e
 
 # Check if we were called to create an image.
 INSTANCEID=$(basename $(dirname $(dirname $SRC_PATH)))
 CREATE_IMAGE=$(onevm show $INSTANCEID 2>/dev/null | awk '/CREATE_IMAGE/,/\]/' 2>/dev/null)
-
-#if [ "x$CREATE_IMAGE" = "x" ]; then
-##    log "Moving $SRC_PATH"
-##    exec_and_log "$SSH $DST_HOST mkdir -p $DST_DIR" \
-##        "Unable to create directory $DST_DIR"
-##    exec_and_log "$SCP -r $SRC $DST" \
-##        "Could not copy $SRC to $DST"
-##    exec_and_log "$SSH $SRC_HOST rm -rf $SRC_PATH"
-#
-#    # /path/ID/imanges/disk.0 as this is tm_mv.sh :/
-#    SRC_DIR=$(dirname $(dirname $SRC_PATH))
-#
-#    # Detach persistent disk
-#    $SSH $SRC_HOST /usr/sbin/detach-persistent-disk.sh $SRC_DIR
-#
-#    log "Deleting $SRC_PATH"
-#    exec_and_log "$SSH $SRC_HOST rm -rf $SRC_PATH" \
-#        "Error deleting $SRC_PATH"
-#
-#    exit $?
-#fi
-
-###
-### Save image as ...
-###
-#exec 1>/tmp/tm_mv.sh.log 2>&1
 
 # Find a way to source this from somewhere.
 PDISKPORT=8445
@@ -96,24 +70,10 @@ sys.path.append('/var/lib/stratuslab/python/')
 from stratuslab.ManifestInfo import ManifestIdentifier
 print ManifestIdentifier().sha1ToIdentifier('$SHA1')")
 
-log "MANIFESTID $IMAGEID"
-
 # Determine the size of the LV that should hold the new image.
 PDISKID_SIZE=$($SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sudo /sbin/lvs --noheading -o lv_size --units G $SNAPSHOT_LV)
 PDISKID_SIZE=$(echo $PDISKID_SIZE | tr -d '\r')
 IMAGESIZE_G=$(echo $PDISKID_SIZE | cut -d'.' -f1)
-
-
-## Request new volume for new image.
-#PDISKID_NEW=$(stratus-create-volume -s ${IMAGESIZE_G} -t $IMAGEID | cut -d' ' -f 2)
-#PDISKID_NEW_FILE=$VGDIR/$PDISKID_NEW
-#
-## Copy data from snapshot LV to the new LV.
-#$SSH $STRATUSLAB_PDISK_ENDPOINT sudo dd if=$SNAPSHOT_FILE of=$PDISKID_NEW_FILE
-#
-## Remove snapshot.
-#$SSH $STRATUSLAB_PDISK_ENDPOINT sudo lvremove -f $SNAPSHOT_LV || \
-#   { sleep 5; $SSH $STRATUSLAB_PDISK_ENDPOINT sudo lvremove -f $SNAPSHOT_LV; }
 
 log "Requesting rebase of the snapshot: $PDISKID_DISK0"
 output=$(stratus-storage --rebase $PDISKID_DISK0) || exit 1 
@@ -200,8 +160,6 @@ cp -f ${MANIFEST_FILE}.orig $MANIFEST_FILE_NOTSIGNED
 # Upload manifest to MarketPlace
 stratus-upload-metadata --marketplace-endpoint=$ORIGIN_MARKETPLACE $MANIFEST_FILE
 
-log "marketplace $ORIGIN_MARKETPLACE $IMAGEID"
-
 # Send email to user
 if [ -n "$CREATOR_EMAIL" ]; then
     EMAIL_TEXT="\n
@@ -218,7 +176,9 @@ The validity of the signing certificate is $P12VALID days.\n
 \n
 Cheers.\n"
     
-    echo -e $EMAIL_TEXT | mail -s "New image created. Go and sign manifest." -a $MANIFEST_FILE_NOTSIGNED -r noreply@stratuslab.eu $CREATOR_EMAIL
+    echo -e $EMAIL_TEXT | mail -s "New image created $IMAGEID." -a $MANIFEST_FILE_NOTSIGNED -r noreply@stratuslab.eu $CREATOR_EMAIL
 else
     log "Fatal: Couldn't send email to the image creator. Creator email was not provided."
 fi
+
+log "MARKETPLACE_AND_IMAGEID $ORIGIN_MARKETPLACE $IMAGEID"
