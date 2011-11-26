@@ -33,6 +33,8 @@ DST_PATH=`arg_path $DST`
 SRC_HOST=`arg_host $SRC`
 DST_HOST=`arg_host $DST`
 
+INSTANCEID=$(basename $(dirname $(dirname $DST_PATH)))
+
 PDISKPORT=8445
 export STRATUSLAB_PDISK_ENDPOINT=$(stratus-config persistent_disk_ip)
 
@@ -135,8 +137,10 @@ function start_from_cow_snapshot() {
             exec_and_log "stratus-storage-update $PDISKID tag $IMAGEID" \
                  "Failed updating tag for $PDISKID disk" true
 
-		    exec_and_log "stratus-storage-update $PDISKID isreadonly true" \
-		         "Failed updating the disk storage" true
+            exec_and_log "stratus-storage-update $PDISKID isreadonly true" \
+                 "Failed updating the disk storage" true
+
+            $SSH -t -t $STRATUSLAB_PDISK_ENDPOINT rm -f $IMAGE_LOCAL || true
         fi
     else
         log "Failed to get PDISK ID for image id: $IMAGEID"
@@ -164,7 +168,6 @@ function start_from_cow_snapshot() {
          "Failed updating the disk storage" true
     log "Snapshot disk created: $PDISKID_COW"
     
-    INSTANCEID=$(basename $(dirname $(dirname $DST_PATH)))
     log "Get instance owner."
     USER=$(onevm list | awk '/^[ \t]*'$INSTANCEID' / {print $2}')
     exec_and_log "stratus-storage-update $PDISKID_COW owner $USER" \

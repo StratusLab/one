@@ -47,7 +47,6 @@ export STRATUSLAB_PDISK_ENDPOINT=$(stratus-config persistent_disk_ip)
 
 VGDIR=$(stratus-config persistent_disk_lvm_device)
 VG=$(basename $VGDIR)
-TMPSTORE=/tmp
 
 # Rocover PDISK ID of disk.0 assuming SRC_PATH is in a form /path/ID/images/disk.X
 VM_DIR=$(dirname $(dirname $SRC_PATH))
@@ -76,7 +75,9 @@ PDISKID_SIZE=$(echo $PDISKID_SIZE | tr -d '\r')
 IMAGESIZE_G=$(echo $PDISKID_SIZE | cut -d'.' -f1)
 
 log "Requesting rebase of the snapshot: $PDISKID_DISK0"
-output=$(stratus-storage --rebase $PDISKID_DISK0) || exit 1 
+output=
+exec_and_log "stratus-storage --rebase $PDISKID_DISK0" \
+    "Failed to rebase the snapshot $PDISKID_DISK0" true 
 PDISKID_NEW=$(echo $output | cut -d' ' -f 2)
 exec_and_log "stratus-storage-update $PDISKID_NEW tag $IMAGEID" \
     "Failed to update tag on $PDISKID_NEW with $IMAGEID" true
