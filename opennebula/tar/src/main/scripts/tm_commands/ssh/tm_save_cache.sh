@@ -148,7 +148,7 @@ c.manifestObject = c._updateManifest()
 c.manifestObject.locations = ['$PDISK_INFO_NEW']
 c.manifest = c.manifestObject.tostring()
 c._saveManifest()
-os.rename(c.manifestLocalFileName, '$MANIFEST_FILE')
+os.system('mv %s %s' % (c.manifestLocalFileName, '$MANIFEST_FILE'))
 c.manifestLocalFileName = '$MANIFEST_FILE'
 c._signManifest()"
 
