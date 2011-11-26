@@ -47,8 +47,10 @@ function start_from_cow_snapshot() {
     IDENTIFIER=$output
     
     VGPATH=$(stratus-config persistent_disk_lvm_device)
-    TMPSTORE=/tmp
-    
+
+    TMPSTORE=$(stratus-config persistent_disk_temp_store) || TMPSTORE=/tmp
+    mkdir -p $TMPSTORE
+
     log "Get PDISK ID from cache."
     # NB! search may return more than one PDISK ID as the tag in not unique!
     PDISKID=$(stratus-storage-search tag $IMAGEID) 
