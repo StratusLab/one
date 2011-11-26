@@ -64,7 +64,7 @@ SNAPSHOT_FILE=$VGDIR/$PDISKID_DISK0
 SNAPSHOT_LV=$VG/$PDISKID_DISK0
 
 # Calculate IMAGE ID and define it as TAG for create-volume.
-SHA1=$(sudo /usr/bin/sha1sum ${SNAPSHOT_FILE} | cut -d' ' -f1)
+SHA1=$(sha1sum ${SNAPSHOT_FILE} | cut -d' ' -f1)
 IMAGEID=$(python -c "import sys
 sys.path.append('/var/lib/stratuslab/python/')
 from stratuslab.ManifestInfo import ManifestIdentifier
@@ -123,7 +123,7 @@ IMAGE_VALIDITY_HOURS=$(( 24 * $P12VALID ))
 PDISK_INFO_NEW="${PDISK_INFO%:*}:${PDISKID_NEW}"
 
 NOT_SET=""
-sudo /usr/bin/python -c "import sys, os
+python -c "import sys, os
 sys.path.append('/var/lib/stratuslab/python/')
 from stratuslab.Creator import Creator
 from stratuslab.ConfigHolder import ConfigHolder
@@ -151,8 +151,6 @@ c._saveManifest()
 os.rename(c.manifestLocalFileName, '$MANIFEST_FILE')
 c.manifestLocalFileName = '$MANIFEST_FILE'
 c._signManifest()"
-
-sudo /bin/chmod 644 ${MANIFEST_FILE}*
 
 # Give a nicer name to origianl manifest.
 cp -f ${MANIFEST_FILE}.orig $MANIFEST_FILE_NOTSIGNED
