@@ -91,7 +91,8 @@ trap onexit EXIT
 P12CERT=$(mktemp --tmpdir=$HOME --suffix=.p12 certXXXX)
 P12PASS=$RANDOM
 P12VALID=2
-stratus-generate-p12 -o $P12CERT -v $P12VALID -p $P12PASS
+exec_and_log "stratus-generate-p12 --output $P12CERT --validity $P12VALID --password $P12PASS" \
+    "Failed to generate P12 certificate for signing metadata" true
 
 # Checksum new image. Create and sign manifest. 
 MANIFEST_DIR=$HOME/manifest$(date +%s)
