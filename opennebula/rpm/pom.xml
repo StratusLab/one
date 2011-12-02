@@ -82,6 +82,7 @@
 	    <require>ruby-mysql</require>
 	    <require>rubygem-sequel</require>
 	    <require>rubygem-bunny</require>
+	    <require>rubygem-stomp</require>
 	    <require>xmlrpc-c</require>
 	    <require>xmlrpc-c-c++</require>
 	    <require>xmlrpc-c-client</require>
