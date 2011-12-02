@@ -68,6 +68,7 @@
 	  <url>http://opennebula.org/</url>
 	  <conflicts>
 	    <conflict>one-2.0-StratusLab</conflict>
+	    <conflict>one-2.2-StratusLab</conflict>
 	  </conflicts>
 	  <provides>
 	    <provide>opennebula</provide>
