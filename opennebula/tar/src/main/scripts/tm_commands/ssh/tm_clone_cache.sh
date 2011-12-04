@@ -45,7 +45,7 @@ function start_from_cow_snapshot() {
     
     # Retrieve the first fully qualified validated MP identifier 
     output=
-    exec_and_log "stratus-policy-image $SRC" "Failed policy validation" true
+    exec_and_log "stratus-policy-image $IMAGEID" "Failed policy validation" true
     IDENTIFIER=$output
     
     VGPATH=$(stratus-config persistent_disk_lvm_device)
