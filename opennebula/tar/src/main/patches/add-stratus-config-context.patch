@@ -8,6 +8,8 @@ index b6c515d..070a799 100755
  
 +# Add StratusLab init script
 +SRC="/var/share/stratuslab/context/init.sh $SRC"
++SRC="/var/share/stratuslab/context/epilog.sh $SRC"
++SRC="/var/share/stratuslab/context/prolog.sh $SRC"
 +
  for f in $SRC; do
      case $f in
@@ -22,6 +24,8 @@ index b420be3..52f5194 100755
  
 +# Add StratusLab init script
 +SRC="/var/share/stratuslab/context/init.sh $SRC"
++SRC="/var/share/stratuslab/context/epilog.sh $SRC"
++SRC="/var/share/stratuslab/context/prolog.sh $SRC"
 +
  for f in $SRC; do
      case $f in
