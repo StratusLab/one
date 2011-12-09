@@ -231,6 +231,8 @@ fi
 	          <location>target/distribution/var/share/stratuslab/context</location>
 	          <includes>
 	            <include>init.sh</include>
+	            <include>epilog.sh</include>
+	            <include>prolog.sh</include>
 	          </includes>
 	        </source>
 	      </sources>
