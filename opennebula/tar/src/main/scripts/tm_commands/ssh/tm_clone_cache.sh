@@ -55,7 +55,7 @@ function start_from_cow_snapshot() {
 
     log "Get PDISK ID from cache."
     # NB! search may return more than one PDISK ID as the tag in not unique!
-    PDISKID=$(stratus-storage-search tag $IMAGEID) 
+    PDISKID=$(stratus-storage-search tag $IMAGEID | head -n1) 
     if [ "$?" -eq "0" ];then 
         if [ -z "$PDISKID" ]; then
             log "Cache miss. Image $IMAGEID not cached."
