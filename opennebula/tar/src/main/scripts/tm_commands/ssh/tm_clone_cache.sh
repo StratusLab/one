@@ -55,7 +55,7 @@ function start_from_cow_snapshot() {
 
     log "Get PDISK ID from cache."
     # NB! search may return more than one PDISK ID as the tag in not unique!
-    PDISKID=$(stratus-storage-search tag $IMAGEID | head -n1) 
+    PDISKID=$(stratus-storage-search tag $IMAGEID)
     if [ "$?" -eq "0" ];then 
         if [ -z "$PDISKID" ]; then
             log "Cache miss. Image $IMAGEID not cached."
@@ -141,6 +141,12 @@ function start_from_cow_snapshot() {
                  "Failed updating the disk storage" true
 
             $SSH -t -t $STRATUSLAB_PDISK_ENDPOINT rm -f $IMAGE_LOCAL || true
+        else
+            # Sanitize in case of multiple results.
+            PDISKID=${PDISKID%% *}
+            n="
+"
+            PDISKID=${PDISKID%%${n}*}
         fi
     else
         log "Failed to get PDISK ID for image id: $IMAGEID"
