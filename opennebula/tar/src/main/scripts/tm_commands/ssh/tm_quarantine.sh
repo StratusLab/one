@@ -73,10 +73,19 @@ PDISK_INFO=$(echo $PDISK_INFO|tr -d '\r')
 PDISKID_DISK0=${PDISK_INFO##*:}
 export STRATUSLAB_PDISK_ENDPOINT=$(stratus-config persistent_disk_ip)
 
-# Update the storage service
-log "Setting persistent disk for quarantine $SRC_PATH"
-exec_and_log "stratus-storage-quarantine $PDISKID_DISK0" \
-    "Error setting persistent disk quarantine $SRC_PATH"
+# TODO: stratus-storage-quarantine changes ownership of disks to 'pdisk'.
+#       We don't want privately owned disks to change their ownership.
+#       Find a better way to do this.
+COW_FALSE=$(stratus-storage-search iscow false)
+READONLY_FALSE=$(stratus-storage-search isreadonly false)
+if ( ! echo $COW_FALSE | grep -q $PDISKID_DISK0 ) && ( ! echo $READONLY_FALSE | grep -q $PDISKID_DISK0 ); then
+    # Update the storage service
+    log "Setting persistent disk for quarantine $SRC_PATH"
+    exec_and_log "stratus-storage-quarantine $PDISKID_DISK0" \
+        "Error setting persistent disk quarantine $SRC_PATH"
+else
+    log "Skipping quarantine for privately owned disk $PDISKID_DISK0"
+fi
 
 # Log what is going to be done. 
 log "info: beginning to move files to quarantine $SRC_DIR, $QUARANTINE_DIR" 
