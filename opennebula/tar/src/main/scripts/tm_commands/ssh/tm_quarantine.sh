@@ -78,13 +78,13 @@ export STRATUSLAB_PDISK_ENDPOINT=$(stratus-config persistent_disk_ip)
 #       Find a better way to do this.
 COW_FALSE=$(stratus-storage-search iscow false)
 READONLY_FALSE=$(stratus-storage-search isreadonly false)
-if ( ! echo $COW_FALSE | grep -q $PDISKID_DISK0 ) && ( ! echo $READONLY_FALSE | grep -q $PDISKID_DISK0 ); then
+if ( echo $COW_FALSE | grep -q $PDISKID_DISK0 ) && ( echo $READONLY_FALSE | grep -q $PDISKID_DISK0 ); then
+    log "Skipping quarantine in PDISK server for privately owned disk $PDISKID_DISK0"
+else
     # Update the storage service
     log "Setting persistent disk for quarantine $SRC_PATH"
     exec_and_log "stratus-storage-quarantine $PDISKID_DISK0" \
         "Error setting persistent disk quarantine $SRC_PATH"
-else
-    log "Skipping quarantine for privately owned disk $PDISKID_DISK0"
 fi
 
 # Log what is going to be done. 
