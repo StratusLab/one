@@ -10,7 +10,7 @@
   <parent>
     <groupId>eu.stratuslab.pkgs</groupId>
     <artifactId>one-2.2-StratusLab</artifactId>  
-    <version>1.0.2</version>
+    <version>1.0.3-SNAPSHOT</version>
   </parent>
 
   <dependencies>
@@ -19,7 +19,7 @@
       <artifactId>one-2.2-StratusLab-tar</artifactId>
       <classifier>distribution</classifier>
       <type>tar.gz</type>
-      <version>1.0.2</version>
+      <version>1.0.3-SNAPSHOT</version>
     </dependency>
   </dependencies>
 
