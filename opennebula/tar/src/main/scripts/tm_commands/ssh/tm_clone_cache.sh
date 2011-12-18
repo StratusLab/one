@@ -74,7 +74,7 @@ function start_from_cow_snapshot() {
             trap onexit EXIT
     
             set -e
-    
+
             IMAGE_LOCAL=$TMPSTORE/$(date +%s).${IMAGELOCATION##*/}
             exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT curl -o $IMAGE_LOCAL $IMAGELOCATION" \
                 "Failed to download $IMAGELOCATION" true
@@ -122,10 +122,14 @@ function start_from_cow_snapshot() {
             PDISKID=$(echo $output | cut -d' ' -f 2)
     
             if [[ $IMAGEFORMAT == qco* ]]; then
-                # qcow image can be put on LV as is w/o conversion to raw. Test this.
-                # Though this probably will not work with create-image.
-                exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT qemu-img convert -O raw $IMAGE_LOCAL $VGPATH/$PDISKID" \
-                    "Failed to convert qcow image to raw." true
+                # and was already uncompressed
+                if [ ! -z $uncompress ] ; then
+                    exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sh -c \"dd of=$VGPATH/$PDISKID if=$IMAGE_LOCAL bs=2048\"" \
+                        "Failed to write qcow image to Logical Volume" true
+                else
+                    exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT qemu-img convert -O raw $IMAGE_LOCAL $VGPATH/$PDISKID" \
+                        "Failed to convert qcow image to raw." true
+                fi
             else
                 exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sh -c \"$uncompress -c $IMAGE_LOCAL | dd of=$VGPATH/$PDISKID bs=2048\"" \
                     "Failed to uncompress the image to Logical Volume" true
