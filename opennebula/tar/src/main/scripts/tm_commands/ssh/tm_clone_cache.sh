@@ -116,7 +116,10 @@ function start_from_cow_snapshot() {
             IMAGESIZE_G=$(echo "$IMAGESIZE_b/1024^3 + 1" | bc)
     
             # This new LV should never be shared by iSCSI server.
-            PDISKID=$(stratus-storage -s $IMAGESIZE_G | cut -d' ' -f 2)
+            output=
+            exec_and_log "stratus-storage -s $IMAGESIZE_G" \
+                "Failed to create disk of size $IMAGESIZE_G GB in PDISK server." true
+            PDISKID=$(echo $output | cut -d' ' -f 2)
     
             if [[ $IMAGEFORMAT == qco* ]]; then
                 # qcow image can be put on LV as is w/o conversion to raw. Test this.
