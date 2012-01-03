@@ -10,7 +10,7 @@
   <parent>
     <groupId>eu.stratuslab.pkgs</groupId>
     <artifactId>quarantine-cleanup</artifactId>
-    <version>1.0.5-SNAPSHOT</version>
+    <version>1.0.6-SNAPSHOT</version>
   </parent>
 
   <build>
