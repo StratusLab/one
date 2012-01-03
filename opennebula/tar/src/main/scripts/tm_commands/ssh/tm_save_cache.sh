@@ -110,6 +110,11 @@ ORIGIN_MARKETPLACE=$(echo $ORIGIN_IMAGEID_URL | awk -F/ '{print $1"/"$2"/"$3}')
 #CREATOR_NAME=
 #NEWIMAGE_VERSION=
 #NEWIMAGE_COMMENT=
+# Optinal attributes
+#MSG_TYPE=
+#MSG_ENDPOINT=
+#MSG_QUEUE=
+#MSG_MESSAGE=
 MANIFEST_INFO_VARS=$MANIFEST_DIR/manifest_info_vars.sh
 onevm show $INSTANCEID | awk '/CREATE_IMAGE/,/\]/' | \
     sed 's/,$//g;s/\]//g;s/CREATE_IMAGE.*//;s/^[ \t]*//;/^$/d' | \
@@ -179,6 +184,15 @@ Cheers.\n"
     echo -e $EMAIL_TEXT | mail -s "New image created $IMAGEID." -a $MANIFEST_FILE_NOTSIGNED -r noreply@stratuslab.eu $CREATOR_EMAIL
 else
     log "Fatal: Couldn't send email to the image creator. Creator email was not provided."
+fi
+
+if [ -n "$MSG_TYPE" ] && [ -n "$(which stratus-msg-publisher)" ] ; then
+	log "Publishing message $MSG_MESSAGE to $MSG_TYPE:$MSG_ENDPOINT:$MSG_QUEUE"
+	stratus-msg-publisher --msg-type $MSG_TYPE \
+	                      --msg-endpoint $MSG_ENDPOINT \
+	                      --msg-queue $MSG_QUEUE \
+	                      --imageid $IMAGEID \
+						  $MSG_MESSAGE
 fi
 
 log "MARKETPLACE_AND_IMAGEID $ORIGIN_MARKETPLACE $IMAGEID"
