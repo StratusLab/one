@@ -122,28 +122,31 @@ function start_from_cow_snapshot() {
                 "Failed to create disk of size $IMAGESIZE_G GB in PDISK server." true
             PDISKID=$(echo $output | cut -d' ' -f 2)
 
-            output=
-            exec_and_log "stratus-manifest --get-element md5 $IDENTIFIER" \
-                "Failed to get md5 from manifest of $IDENTIFIER" true
-            MD5=$output
+            CHECKSUM=sha1
+            CHECKSUM_CMD=${CHECKSUM}sum
 
-            MD5_FILE="${IMAGE_LOCAL}.md5"
-            echo "$MD5  -" > $MD5_FILE
+            output=
+            exec_and_log "stratus-manifest --get-element $CHECKSUM $IDENTIFIER" \
+                "Failed to get $CHECKSUM from manifest of $IDENTIFIER" true
+            CHECKSUM_VAL=$output
+
+            CHECKSUM_FILE="${IMAGE_LOCAL}.$CHECKSUM"
+            echo "$CHECKSUM_VAL  -" > $CHECKSUM_FILE
  
             if [[ $IMAGEFORMAT == qco* ]]; then
-                exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sh -c \"cat $IMAGE_LOCAL | md5sum -c $MD5_FILE\"" \
-                    "Image md5 checksum check failed." true
+                exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sh -c \"cat $IMAGE_LOCAL | $CHECKSUM_CMD -c $CHECKSUM_FILE\"" \
+                    "Image $CHECKSUM checksum check failed." true
                 exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sh -c \"cp -f $IMAGE_LOCAL $VGPATH/$PDISKID\"" \
                     "Failed to write qcow image to Logical Volume" true
             else
                 if [ -z "$uncompress" ] ; then
-                    exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sh -c \"cat $IMAGE_LOCAL | md5sum -c $MD5_FILE\"" \
-                        "Image md5 checksum check failed." true
+                    exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sh -c \"cat $IMAGE_LOCAL | $CHECKSUM_CMD -c $CHECKSUM_FILE\"" \
+                        "Image $CHECKSUM checksum check failed." true
                     exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sh -c \"dd if=$IMAGE_LOCAL of=$VGPATH/$PDISKID bs=2048\"" \
                         "Failed to write the image to Logical Volume" true
                 else 
-                    exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sh -c \"$uncompress -c $IMAGE_LOCAL | md5sum -c $MD5_FILE\"" \
-                        "Image md5 checksum check failed." true
+                    exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sh -c \"$uncompress -c $IMAGE_LOCAL | $CHECKSUM_CMD -c $CHECKSUM_FILE\"" \
+                        "Image $CHECKSUM checksum check failed." true
                     exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sh -c \"$uncompress -c $IMAGE_LOCAL | dd of=$VGPATH/$PDISKID bs=2048\"" \
                         "Failed to uncompress the image to Logical Volume" true
                 fi
