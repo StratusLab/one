@@ -65,20 +65,19 @@ function start_from_cow_snapshot() {
     
             # Critical section - start.
             # Image and its stored copy have to be deleted if something goes wrong.
-            # See blow fo the end of the critical section.
+            # See below for the end of the critical section.
             PDISKID=
             function onexit() {
-                $SSH -t -t $STRATUSLAB_PDISK_ENDPOINT rm -f $IMAGE_LOCAL
+                $SSH -t -t $STRATUSLAB_PDISK_ENDPOINT rm -f ${IMAGE_LOCAL}*
                 [ -n "$PDISKID" ] && stratus-storage-delete $PDISKID
             }
             trap onexit EXIT
     
-            set -e
-
             IMAGE_LOCAL=$TMPSTORE/$(date +%s).${IMAGELOCATION##*/}
             exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT curl -o $IMAGE_LOCAL $IMAGELOCATION" \
                 "Failed to download $IMAGELOCATION" true
     
+            set -e
             IMAGECOMPRESS=$(stratus-manifest --get-element compression $IDENTIFIER)
             uncompress=
             if [ "$IMAGECOMPRESS" = "gz" ];then 
@@ -114,29 +113,42 @@ function start_from_cow_snapshot() {
     
             #IMAGESIZE_G=$(echo "scale=3; $IMAGESIZE_b/1024^3" | bc)
             IMAGESIZE_G=$(echo "$IMAGESIZE_b/1024^3 + 1" | bc)
-    
+   
+            set +e
+ 
             # This new LV should never be shared by iSCSI server.
             output=
             exec_and_log "stratus-storage -s $IMAGESIZE_G" \
                 "Failed to create disk of size $IMAGESIZE_G GB in PDISK server." true
             PDISKID=$(echo $output | cut -d' ' -f 2)
-    
+
+            output=
+            exec_and_log "stratus-manifest --get-element md5 $IDENTIFIER" \
+                "Failed to get md5 from manifest of $IDENTIFIER" true
+            MD5=$output
+
+            MD5_FILE="${IMAGE_LOCAL}.md5"
+            echo "$MD5  -" > $MD5_FILE
+ 
             if [[ $IMAGEFORMAT == qco* ]]; then
-                # and was already uncompressed
-                if [ ! -z $uncompress ] ; then
-                    exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sh -c \"dd of=$VGPATH/$PDISKID if=$IMAGE_LOCAL bs=2048\"" \
-                        "Failed to write qcow image to Logical Volume" true
-                else
-                    exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT qemu-img convert -O raw $IMAGE_LOCAL $VGPATH/$PDISKID" \
-                        "Failed to convert qcow image to raw." true
-                fi
+                exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sh -c \"cat $IMAGE_LOCAL | md5sum -c $MD5_FILE\"" \
+                    "Image md5 checksum check failed." true
+                exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sh -c \"cp -f $IMAGE_LOCAL $VGPATH/$PDISKID\"" \
+                    "Failed to write qcow image to Logical Volume" true
             else
-                exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sh -c \"$uncompress -c $IMAGE_LOCAL | dd of=$VGPATH/$PDISKID bs=2048\"" \
-                    "Failed to uncompress the image to Logical Volume" true
+                if [ -z "$uncompress" ] ; then
+                    exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sh -c \"cat $IMAGE_LOCAL | md5sum -c $MD5_FILE\"" \
+                        "Image md5 checksum check failed." true
+                    exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sh -c \"dd if=$IMAGE_LOCAL of=$VGPATH/$PDISKID bs=2048\"" \
+                        "Failed to write the image to Logical Volume" true
+                else 
+                    exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sh -c \"$uncompress -c $IMAGE_LOCAL | md5sum -c $MD5_FILE\"" \
+                        "Image md5 checksum check failed." true
+                    exec_and_log "$SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sh -c \"$uncompress -c $IMAGE_LOCAL | dd of=$VGPATH/$PDISKID bs=2048\"" \
+                        "Failed to uncompress the image to Logical Volume" true
+                fi
             fi
-    
-            set +e
-    
+
             trap - EXIT
             # Critical section - end.
     
@@ -240,4 +252,3 @@ if [ ! -L $DST_PATH ]; then
   exec_and_log "$SSH -t -t $DST_HOST sudo /bin/chmod ug+w,o-rwx $DST_PATH" \
       "Failed to change mode of $DST_PATH" true
 fi
-
