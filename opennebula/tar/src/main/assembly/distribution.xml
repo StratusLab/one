@@ -131,7 +131,30 @@
       <fileMode>755</fileMode>
       <directory>src/main/scripts/tm_commands</directory>
       <includes>
-	<include>**/*</include>
+        <include>**/*</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <outputDirectory>/usr/lib/one/tm_commands/stratuslab</outputDirectory>
+      <fileMode>755</fileMode>
+      <directory>target/one-install/usr/lib/one/tm_commands/ssh</directory>
+      <includes>
+        <include>*</include>
+      </includes>
+      <excludes>
+        <exclude>tm_clone.sh</exclude>
+        <exclude>tm_mv.sh</exclude>
+        <exclude>tm_delete.sh</exclude>
+      </excludes>
+    </fileSet>
+
+    <fileSet>
+      <outputDirectory>/etc/one/tm_stratuslab</outputDirectory>
+      <fileMode>644</fileMode>
+      <directory>src/main/share/tm_stratuslab</directory>
+      <includes>
+  <include>*</include>
       </includes>
     </fileSet>
 
