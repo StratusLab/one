@@ -66,3 +66,39 @@ index 6070513..27f56a5 100755
 -exec_and_log "$SSH $DST_HOST chmod a+w $DST_PATH"
 -
 +exec_and_log "$SSH $DST_HOST chmod ug+w,o-rwx $DST_PATH"
+diff --git a/src/mad/sh/scripts_common.sh b/src/mad/sh/scripts_common.sh
+index 5730e0b..a324a4a 100755
+--- a/src/mad/sh/scripts_common.sh
++++ b/src/mad/sh/scripts_common.sh
+@@ -91,17 +91,25 @@ function error_message
+ # the command fails
+ function exec_and_log
+ {
++    # If set to 'true' '$message' will be merged with '$output'
++    mergeoutput=$3
+     message=$2
+-    output=`$1 2>&1 1>/dev/null`
++    output=`$1 2>&1`
+     code=$?
+     if [ "x$code" != "x0" ]; then
+         log_error "Command \"$1\" failed."
+         log_error "$output"
+-        if [ -z "$message" ]; then
+-            error_message "$output"
+-        else
+-            error_message "$message"
+-        fi
++        case $# in
++            2 )
++               error_message "$message"
++               ;;
++            3 )
++               [ "$mergeoutput" = "true" ] && error_message "$message\n$output"
++               ;;
++            * )
++               error_message "$output"
++               ;;
++        esac
+         exit $code
+     fi
+     log "Executed \"$1\"."
