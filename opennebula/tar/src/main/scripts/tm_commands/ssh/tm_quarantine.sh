@@ -65,26 +65,48 @@ SRC_DIR=`dirname $SRC_PATH`
 # Detach persistent disk
 $SSH $SRC_HOST /usr/sbin/detach-persistent-disk.sh $SRC_DIR
 
+# Recover PDISK ID of disk.0 assuming SRC_PATH is in a form /path/ID/images/disk.X
+VM_DIR=$(dirname $SRC_PATH)
+PDISK_INFO=$($SSH -q -t -t $SRC_HOST "source /etc/stratuslab/pdisk-host.cfg; head -1 $VM_DIR/\$REGISTER_FILENAME")
+# SSH adds carriage return
+PDISK_INFO=$(echo $PDISK_INFO|tr -d '\r')
+PDISKID_DISK0=${PDISK_INFO##*:}
+export STRATUSLAB_PDISK_ENDPOINT=$(stratus-config persistent_disk_ip)
+
+# TODO: stratus-storage-quarantine changes ownership of disks to 'pdisk'.
+#       We don't want privately owned disks to change their ownership.
+#       Find a better way to do this.
+COW_FALSE=$(stratus-storage-search iscow false)
+READONLY_FALSE=$(stratus-storage-search isreadonly false)
+if ( echo $COW_FALSE | grep -q $PDISKID_DISK0 ) && ( echo $READONLY_FALSE | grep -q $PDISKID_DISK0 ); then
+    log "Skipping quarantine in PDISK server for privately owned disk $PDISKID_DISK0"
+else
+    # Update the storage service
+    log "Setting persistent disk for quarantine $SRC_PATH"
+    exec_and_log "stratus-storage-quarantine $PDISKID_DISK0" \
+        "Error setting persistent disk quarantine $SRC_PATH"
+fi
+
 # Log what is going to be done. 
-log "info: beginning to move files to quarantine ($SRC_DIR, $QUARANTINE_DIR)" 
+log "info: beginning to move files to quarantine $SRC_DIR, $QUARANTINE_DIR" 
 
 # Make the directory if necessary.
 $SSH $SRC_HOST "mkdir -p $QUARANTINE_DIR"
-do_abort $? "cannot create quarantine directory ($QUARANTINE_DIR)" 
+do_abort $? "cannot create quarantine directory $QUARANTINE_DIR" 
 
 # Change times for all files in original directory.
 $SSH $SRC_HOST "find $SRC_DIR -exec touch {} \;"
-do_warn $? "cannot touch all files in source directory ($SRC_DIR)" 
+do_warn $? "cannot touch all files in source directory $SRC_DIR" 
 
 # Reduce the access rights in the directory.
-$SSH SRC_HOST "chmod -R g-rwxs,o-rwx $SRC_DIR"
+$SSH $SRC_HOST "chmod -R g-rwxs,o-rwx $SRC_DIR"
 do_warn $? "cannot reduce access right for source files" 
 
 # Move the directory into place. 
-$SSH SRC_HOST "mv $SRC_DIR $QUARANTINE_DIR"
-do_abort $? "cannot move files to quarantine ($SRC_DIR, $QUARANTINE_DIR)" 
+$SSH $SRC_HOST "mv $SRC_DIR $QUARANTINE_DIR"
+do_abort $? "cannot move files to quarantine $SRC_DIR, $QUARANTINE_DIR"
 
 # Log what is going to be done. 
-log "info: successfully moved files to quarantine ($SRC_DIR, $QUARANTINE_DIR)" 
+log "info: successfully moved files to quarantine $SRC_DIR, $QUARANTINE_DIR" 
 
 exit 0
