@@ -15,7 +15,7 @@
       <fileMode>755</fileMode>
       <directory>target/one-install/var/lib/one/remotes</directory>
       <includes>
-	<include>**/*</include>
+        <include>**/*</include>
       </includes>
     </fileSet>
 
@@ -25,7 +25,7 @@
       <fileMode>755</fileMode>
       <directory>src/main/ruby</directory>
       <includes>
-	<include>**/*</include>
+        <include>**/*</include>
       </includes>
     </fileSet>
 
@@ -35,7 +35,7 @@
       <fileMode>755</fileMode>
       <directory>src/main/scripts</directory>
       <includes>
-	<include>oned</include>
+        <include>oned</include>
       </includes>
     </fileSet>
 
@@ -44,9 +44,9 @@
       <fileMode>755</fileMode>
       <directory>src/main/scripts</directory>
       <includes>
-	<include>init.sh</include>
-	<include>epilog.sh</include>
-	<include>prolog.sh</include>
+        <include>init.sh</include>
+        <include>epilog.sh</include>
+        <include>prolog.sh</include>
       </includes>
     </fileSet>
 
@@ -55,10 +55,10 @@
       <fileMode>644</fileMode>
       <directory>target/one-install/etc</directory>
       <includes>
-	<include>**/*</include>
+        <include>**/*</include>
       </includes>
       <excludes>
-	<exclude>**/auth.conf</exclude>
+        <exclude>**/auth.conf</exclude>
       </excludes>
     </fileSet>
 
@@ -67,7 +67,7 @@
       <fileMode>644</fileMode>
       <directory>src/main/share/auth</directory>
       <includes>
-	<include>auth.conf</include>
+        <include>auth.conf</include>
       </includes>
     </fileSet>
 
@@ -76,7 +76,7 @@
       <fileMode>755</fileMode>
       <directory>target/one-install/usr/bin</directory>
       <includes>
-	<include>**/*</include>
+        <include>**/*</include>
       </includes>
     </fileSet>
 
@@ -85,7 +85,7 @@
       <fileMode>755</fileMode>
       <directory>target/one-install/usr/lib</directory>
       <includes>
-	<include>**/*</include>
+        <include>**/*</include>
       </includes>
     </fileSet>
 
@@ -94,10 +94,10 @@
       <fileMode>644</fileMode>
       <directory>target/one-install/usr/share</directory>
       <includes>
-	<include>**/*</include>
+        <include>**/*</include>
       </includes>
       <excludes>
-	<exclude>one/hooks/**/*</exclude>
+        <exclude>one/hooks/**/*</exclude>
       </excludes>
     </fileSet>
 
@@ -106,7 +106,7 @@
       <fileMode>755</fileMode>
       <directory>target/one-install/usr/share/one/hooks</directory>
       <includes>
-	<include>**/*</include>
+        <include>**/*</include>
       </includes>
     </fileSet>
 
@@ -115,7 +115,7 @@
       <fileMode>755</fileMode>
       <directory>src/main/hooks</directory>
       <includes>
-	<include>**/*</include>
+        <include>**/*</include>
       </includes>
     </fileSet>
 
@@ -124,7 +124,7 @@
       <fileMode>644</fileMode>
       <directory>src/main/share</directory>
       <includes>
-	<include>**/*</include>
+        <include>**/*</include>
       </includes>
     </fileSet>
 
@@ -133,7 +133,30 @@
       <fileMode>755</fileMode>
       <directory>src/main/scripts/tm_commands</directory>
       <includes>
-      	<include>**/*</include>
+        <include>**/*</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <outputDirectory>/usr/lib/one/tm_commands/stratuslab</outputDirectory>
+      <fileMode>755</fileMode>
+      <directory>target/one-install/usr/lib/one/tm_commands/ssh</directory>
+      <includes>
+        <include>*</include>
+      </includes>
+      <excludes>
+        <exclude>tm_clone.sh</exclude>
+        <exclude>tm_mv.sh</exclude>
+        <exclude>tm_delete.sh</exclude>
+      </excludes>
+    </fileSet>
+
+    <fileSet>
+      <outputDirectory>/etc/one/tm_stratuslab</outputDirectory>
+      <fileMode>644</fileMode>
+      <directory>src/main/share/tm_stratuslab</directory>
+      <includes>
+  <include>*</include>
       </includes>
     </fileSet>
 

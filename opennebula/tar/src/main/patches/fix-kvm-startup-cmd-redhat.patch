@@ -1,8 +1,8 @@
 diff --git a/src/vmm/LibVirtDriverKVM.cc b/src/vmm/LibVirtDriverKVM.cc
-index ce71f4e..8287524 100644
+index ea7924c..8c1a163 100644
 --- a/src/vmm/LibVirtDriverKVM.cc
 +++ b/src/vmm/LibVirtDriverKVM.cc
-@@ -262,7 +262,7 @@ int LibVirtDriver::deployment_description_kvm(
+@@ -266,7 +266,7 @@ int LibVirtDriver::deployment_description_kvm(
  
          if(emulator_path.empty())
          {

@@ -1,12 +1,10 @@
-diff --git a/src/tm_mad/nfs/tm_nfs.conf b/src/tm_mad/nfs/tm_nfs.conf
-index 5158752..ec1397e 100644
---- a/src/tm_mad/nfs/tm_nfs.conf
-+++ b/src/tm_mad/nfs/tm_nfs.conf
-@@ -2,6 +2,6 @@ CLONE   = nfs/tm_clone.sh
- LN      = nfs/tm_ln.sh
- MKSWAP  = nfs/tm_mkswap.sh
- MKIMAGE = nfs/tm_mkimage.sh
--DELETE  = nfs/tm_delete.sh
-+DELETE  = nfs/tm_quarantine.sh
- MV      = nfs/tm_mv.sh
- CONTEXT = nfs/tm_context.sh
+--- a/src/tm_mad/ssh/tm_ssh.conf
++++ b/src/tm_mad/ssh/tm_ssh.conf
+@@ -18,6 +18,6 @@ CLONE   = ssh/tm_clone.sh
+ LN      = ssh/tm_ln.sh
+ MKSWAP  = ssh/tm_mkswap.sh
+ MKIMAGE = ssh/tm_mkimage.sh
+-DELETE  = ssh/tm_delete.sh
++DELETE  = ssh/tm_quarantine.sh
+ MV      = ssh/tm_mv.sh
+ CONTEXT = ssh/tm_context.sh
