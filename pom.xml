@@ -49,6 +49,11 @@ package and utilities.
     <developerConnection>scm:git:ssh://apache@code.stratuslab.eu/ext/git/stratuslab-one.git</developerConnection>
   </scm>
 
+  <properties>
+    <nexus.release.repository.name>fedora-14-releases</nexus.release.repository.name>
+    <nexus.snapshot.repository.name>fedora-14-snapshots</nexus.snapshot.repository.name>
+  </properties>
+
   <distributionManagement>
     <repository>
       <id>stratuslab.releases</id>
@@ -65,11 +70,6 @@ package and utilities.
       <url>scp://hudson.stratuslab.eu/var/www/one</url>
     </site>
   </distributionManagement>
-
-  <properties>
-    <nexus.release.repository.name>fedora14-one-3.0-releases</nexus.release.repository.name>
-    <nexus.snapshot.repository.name>fedora14-one-3.0-snapshots</nexus.snapshot.repository.name>
-  </properties>
 
   <build>
 
