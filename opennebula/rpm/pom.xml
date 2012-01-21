@@ -88,6 +88,7 @@
 	    <require>xmlrpc-c-c++</require>
 	    <require>xmlrpc-c-client</require>
 	    <require>xmlrpc-c-client++</require>
+	    <require>qemu-img</require>
 	  </requires>
 	  <needarch>x86_64</needarch>
 	  <description>
@@ -232,6 +233,8 @@ fi
 	          <location>target/distribution/var/share/stratuslab/context</location>
 	          <includes>
 	            <include>init.sh</include>
+	            <include>epilog.sh</include>
+	            <include>prolog.sh</include>
 	          </includes>
 	        </source>
 	      </sources>
