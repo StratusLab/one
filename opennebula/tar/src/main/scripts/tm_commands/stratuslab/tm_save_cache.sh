@@ -118,7 +118,7 @@ ORIGIN_MARKETPLACE=$(echo $ORIGIN_IMAGEID_URL | awk -F/ '{print $1"/"$2"/"$3}')
 MANIFEST_INFO_VARS=$MANIFEST_DIR/manifest_info_vars.sh
 onevm show $INSTANCEID | awk '/CREATE_IMAGE/,/\]/' | \
     sed 's/,$//g;s/\]//g;s/CREATE_IMAGE.*//;s/^[ \t]*//;/^$/d' | \
-    awk -F= '{printf "%s=\"%s\"\n", $1, $2}'  > $MANIFEST_INFO_VARS
+    awk -F= '{printf "%s=%s\n", $1, $2}'  > $MANIFEST_INFO_VARS
 source $MANIFEST_INFO_VARS
 VARS=`cat $MANIFEST_INFO_VARS | egrep -e '^[A-Z]*=' | sed 's/=.*$//'`
 for v in $VARS; do
