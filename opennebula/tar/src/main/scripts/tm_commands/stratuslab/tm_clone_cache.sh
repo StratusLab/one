@@ -197,7 +197,7 @@ function start_from_cow_snapshot() {
     log "Snapshot disk created: $PDISKID_COW"
     
     log "Get instance owner."
-    USER=$(onevm list | awk '/^[ \t]*'$INSTANCEID' / {print $2}')
+    USER=$(onevm show $INSTANCEID | grep ^USER | cut -d: -f2 | tr -d " \n")
     exec_and_log "stratus-storage-update $PDISKID_COW owner $USER" \
          "Failed updating the disk storage" true
     
@@ -221,7 +221,7 @@ function start_from_cow_snapshot() {
 
 function start_from_persisted() {
     INSTANCEID=$(basename $(dirname $(dirname $DST_PATH)))
-    USER=$(onevm list | awk '/^[ \t]*'$INSTANCEID'/ {print $2}')
+    USER=$(onevm show $INSTANCEID | grep ^USER | cut -d: -f2 | tr -d " \n")
     PASS=$(awk -F= '/'$USER'/, sub(/\,.*/,"") {print $2; exit}' /etc/stratuslab/authn/login-pswd.properties)
 
     UUID=${SRC##*:}
