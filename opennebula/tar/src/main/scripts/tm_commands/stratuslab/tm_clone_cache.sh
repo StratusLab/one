@@ -184,8 +184,6 @@ function start_from_cow_snapshot() {
     }
     trap onexit EXIT
     
-    set -e
-    
     log "Requesting snapshot disk of the origin: $PDISKID"
     output=
     exec_and_log "stratus-storage --cow $PDISKID -t $IMAGEID" \
@@ -212,8 +210,6 @@ function start_from_cow_snapshot() {
     log "Persistent disk handling $PDISKID_COW_URL $DST"
     exec_and_log "$SSH -t -t $DST_HOST /usr/sbin/attach-persistent-disk.sh $PDISKID_COW_URL $DST_PATH" \
         "Failed to attach persistent disk $DST_PATH" true
-    
-    set +e
     
     trap - EXIT
     # Critical section - end.
