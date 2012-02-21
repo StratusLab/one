@@ -41,13 +41,31 @@ export STRATUSLAB_PDISK_ENDPOINT=$(stratus-config persistent_disk_ip)
 function start_from_cow_snapshot() {
 
     log "Applying policy on $SRC"
+    # Obtain Marketplace endpoint based on provided source
     IMAGEID=${SRC##*/}
-    
-    # Retrieve the first fully qualified validated MP identifier 
+    case $SRC in
+    http://*)
+        # Extract hostname:port from source URL
+        MP=${SRC:7}
+        MARKETPLACE_ENDPOINT=http://${MP%%/*}
+        ;;
+    *) # local Marketplace
+        # SunStone adds '<hostname>:' to the image ID
+        IMAGEID=${IMAGEID##*:}
+
+        # Local Markeptlace should be defined in StratuLab configuration file
+        output=
+        exec_and_log "stratus-config marketplace_endpoint" \
+            "Failed to get Marketplace endpoint from StratusLab configuration file." true
+        MARKETPLACE_ENDPOINT=$output
+        ;;
+    esac
+    # Retrieve the first fully qualified validated Marketplace identifier 
     output=
-    exec_and_log "stratus-policy-image $IMAGEID" "Failed policy validation" true
+    exec_and_log "stratus-policy-image --marketplace-endpoint $MARKETPLACE_ENDPOINT $IMAGEID" \
+        "Failed policy validation" true
     IDENTIFIER=$output
-    
+
     VGPATH=$(stratus-config persistent_disk_lvm_device)
 
     TMPSTORE=$(stratus-config persistent_disk_temp_store) || TMPSTORE=/tmp
