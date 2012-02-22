@@ -169,7 +169,7 @@ stratus-upload-metadata --marketplace-endpoint=$ORIGIN_MARKETPLACE $MANIFEST_FIL
 if [ -n "$CREATOR_EMAIL" ]; then
     EMAIL_TEXT="\n
 Image creation was successful.\n
-New image was stored in local PDISK service https://$PDISK_SERVICE_HOSTPORT/disks/$PDISKID_NEW\n
+New image was stored in local PDISK service https://$PDISK_SERVICE_HOSTPORT/{cert,pswd}/disks/$PDISKID_NEW\n
 Image manifest with ID $IMAGEID was signed with dummy certificate and uploaded to $ORIGIN_MARKETPLACE.\n
 Alternatively, you can sign attached manifest and upload to Marketplace with:\n
 stratus-sign-metadata <manifest file>\n
