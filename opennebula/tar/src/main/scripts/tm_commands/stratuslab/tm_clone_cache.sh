@@ -235,12 +235,10 @@ function start_from_cow_snapshot() {
 
 function start_from_persisted() {
     INSTANCEID=$(basename $(dirname $(dirname $DST_PATH)))
-    USER=$(onevm show $INSTANCEID | grep ^USER | cut -d: -f2 | tr -d " \n")
-    PASS=$(awk -F= '/'$USER'/, sub(/\,.*/,"") {print $2; exit}' /etc/stratuslab/authn/login-pswd.properties)
 
     UUID=${SRC##*:}
-    COW_FALSE=$(stratus-storage-search --pdisk-username $USER --pdisk-password $PASS iscow false)
-    READONLY_FALSE=$(stratus-storage-search --pdisk-username $USER --pdisk-password $PASS isreadonly false)
+    COW_FALSE=$(stratus-storage-search iscow false)
+    READONLY_FALSE=$(stratus-storage-search isreadonly false)
     if ( echo $COW_FALSE | grep -q $UUID ) && ( echo $READONLY_FALSE | grep -q $UUID ); then
         DST_DIR=`dirname $DST_PATH`
         log "creating directory $DST_DIR"
