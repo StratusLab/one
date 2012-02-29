@@ -4,7 +4,7 @@
   
   <groupId>eu.stratuslab.pkgs</groupId>
   <artifactId>one</artifactId>  
-  <version>1.0.7</version>
+  <version>1.0.8-SNAPSHOT</version>
   <name>OpenNebula (ROOT POM)</name>
 
   <url>http://hudson.stratuslab.eu/one</url>
