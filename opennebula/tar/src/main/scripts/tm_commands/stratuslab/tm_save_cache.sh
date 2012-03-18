@@ -57,13 +57,13 @@ PDISKID_DISK0=${PDISK_INFO##*:}
 PDISK_SERVICE_HOSTPORT=$(echo $PDISK_INFO|awk -F: '{print $2":"$3}')
 
 # Detach disks from VM
-$SSH $SRC_HOST /usr/sbin/detach-persistent-disk.sh $VM_DIR
+$SSH -t -t $SRC_HOST /usr/sbin/detach-persistent-disk.sh $VM_DIR
 
 SNAPSHOT_FILE=$VGDIR/$PDISKID_DISK0
 SNAPSHOT_LV=$VG/$PDISKID_DISK0
 
 # Calculate IMAGE ID and define it as TAG for create-volume.
-SHA1=$(sha1sum ${SNAPSHOT_FILE} | cut -d' ' -f1)
+SHA1=$($SSH -q -t -t $STRATUSLAB_PDISK_ENDPOINT sha1sum ${SNAPSHOT_FILE} | cut -d' ' -f1)
 IMAGEID=$(python -c "import sys
 sys.path.append('/var/lib/stratuslab/python/')
 from stratuslab.ManifestInfo import ManifestIdentifier
