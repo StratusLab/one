@@ -81,9 +81,27 @@
     </fileSet>
 
     <fileSet>
+      <outputDirectory>/usr/sbin</outputDirectory>
+      <fileMode>755</fileMode>
+      <directory>src/main/scripts</directory>
+      <includes>
+        <include>patrestorer</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
       <outputDirectory>/usr/lib</outputDirectory>
       <fileMode>755</fileMode>
       <directory>target/one-install/usr/lib</directory>
+      <includes>
+        <include>**/*</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <outputDirectory>/usr/lib/one/ruby</outputDirectory>
+      <fileMode>755</fileMode>
+      <directory>src/main/lib/one/ruby/</directory>
       <includes>
         <include>**/*</include>
       </includes>
