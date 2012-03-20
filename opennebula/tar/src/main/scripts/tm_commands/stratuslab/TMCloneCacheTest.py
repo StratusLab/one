@@ -87,12 +87,12 @@ class TMCloneCacheTest(TestCase):
         self.assertEquals(self.tm._findNumbers(elems), [42, 3, 71])
         
     def test_should_return_mp_image_id(self):
-        self.tm.diskSrc = 'http://marketplace:8383/path/image-id-xy'
-        self.assertEquals(self.tm._getMarketplaceImageIdFromURI(), 'image-id-xy')
+        diskSrc = 'http://marketplace:8383/path/image-id-xy'
+        self.assertEquals(self.tm._getImageIdFromURI(diskSrc), 'image-id-xy')
         
     def test_should_return_mp_image_id_despite_trailing_slash(self):
-        self.tm.diskSrc = 'http://marketplace:8383/path/image-id-xy/'
-        self.assertEquals(self.tm._getMarketplaceImageIdFromURI(), 'image-id-xy')
+        diskSrc = 'http://marketplace:8383/path/image-id-xy/'
+        self.assertEquals(self.tm._getImageIdFromURI(diskSrc), 'image-id-xy')
     
     def test_should_return_mp_endpoint(self):
         self.tm.diskSrc = 'http://marketplace:8383/path/image-id-xy/'

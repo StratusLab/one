@@ -31,6 +31,7 @@ from signal import signal, SIGINT
 from stratuslab.Authn import LocalhostCredentialsConnector
 from stratuslab.CloudConnectorFactory import CloudConnectorFactory
 from stratuslab.marketplace.ManifestDownloader import ManifestDownloader
+from time import time
 
 class TMCloneCache(object):
     ''' Clone or retrieve from cache disk image
@@ -45,6 +46,9 @@ class TMCloneCache(object):
     _PATH_PART = 1
 
     _PDISK_PORT = 8445
+    
+    _UNCOMPRESS_TOOL = {'gz': '/bin/gunzip',
+                       'bz2': '/bin/bunzip2'}
 
     def __init__(self, args, **kwargs):
         self.args = args
@@ -55,28 +59,20 @@ class TMCloneCache(object):
         self.instanceId = None
         self.marketplaceEndpoint = None
         self.marketplaceImageID = None
-        self.marketplaceImageURI = None
         self.pdiskImageId = None
         self.pdiskSnapshotId = None
-        self.imageLocation = None
+        self.downloadedLocalImageLocation = None # New 
         
         self.configHolder = ConfigHolder({'verboseLevel': 0,
                                      'configFile': kwargs.get('config', defaultConfigFile)})
         self.config = Configurator(self.configHolder)
         self.pdiskEndpoint = self.config.getValue('persistent_disk_ip')    
         self.pdiskLVMDevice = self.config.getValue('persistent_disk_lvm_device')
-        self.pdiskTmpStore = self._getPDiskTempStore()
         
         self.pdisk = PersistentDisk(self.configHolder)
         self.manifestDownloader = ManifestDownloader(self.configHolder)
         
         self.defaultSignalHandler = None
-    
-    def _getPDiskTempStore(self):
-        store = self.config.getValue('persistent_disk_temp_store') or '/tmp'
-        if not isdir(store):
-            makedirs(store)
-        return store
     
     def run(self):
         self._checkArgs()
@@ -171,7 +167,7 @@ class TMCloneCache(object):
     def _setMarketplaceInfos(self):
         if self.diskSrc.startswith('http://'):
             self.marketplaceEndpoint = self._getMarketplaceEndpointFromURI()
-            self.marketplaceImageID = self._getMarketplaceImageIdFromURI()
+            self.marketplaceImageID = self._getImageIdFromURI(self.diskSrc)
         else: # Local marketplace
             self.marketplaceEndpoint = self.config.getValue('marketplace_endpoint')
             # SunStone adds '<hostname>:' to the image ID
@@ -181,8 +177,8 @@ class TMCloneCache(object):
         uri = urlparse(self.diskSrc)
         return '%s://%s/' % (uri.scheme, uri.netloc)
     
-    def _getMarketplaceImageIdFromURI(self):
-        fragments = self.diskSrc.split('/')
+    def _getImageIdFromURI(self, uri):
+        fragments = uri.split('/')
         # POP two times if trailing slash
         return fragments.pop() or fragments.pop()
     
@@ -211,15 +207,39 @@ class TMCloneCache(object):
         return True
     
     def _retrieveAndCachePDiskImage(self):
-        self.marketplaceImageURI = self._getFullyQualifiedMarketplaceImage()
+        #marketplaceImageURI = self._getFullyQualifiedMarketplaceImage()
         self.manifestDownloader.downloadManifestByImageId(self.marketplaceImageID)
         self._startCriticalSection(self._deletePDiskSnapshot)
-        
-        self._deletePDiskSnapshot()
+        self._downloadImage()
+        self._uncompressImage()
+        self._endCriticalSection()
     
     def _downloadImage(self):
-        self.imageLocation = self.manifestDownloader.getImageLocations()
+        imageLocationOnServer = self.manifestDownloader.getImageLocations()
+        imageName = self._getImageIdFromURI(imageLocationOnServer)
+        pdiskTmpStore = self._getPDiskTempStore()
+        self.downloadedLocalImageLocation = '%s/%s.%s' % (pdiskTmpStore,
+                                                          int(time),
+                                                          imageName)
+        self._sshDst(['curl', '-o', self.downloadedLocalImageLocation, imageLocationOnServer], 
+                     'Unable to download "%"' % imageLocationOnServer)
+    
+    def _uncompressImage(self):
+        compression = self._getImageCompressionType()
+        if not compression:
+            return
+        uncompressTool = self._UNCOMPRESS_TOOL[compression]
         
+    
+    def _getImageCompressionType(self):
+        compression = self.manifestDownloader.getImageElementValue('compression')
+        return compression
+        
+    def _getPDiskTempStore(self):
+        store = self.config.getValue('persistent_disk_temp_store') or '/tmp'
+        if not isdir(store):
+            makedirs(store)
+        return store
     
     def _createPDiskSnapshot(self):
         snapshotTag = 'snapshot:%s' % self.pdiskImageId
@@ -240,10 +260,10 @@ class TMCloneCache(object):
                                    self._PDISK_PORT,
                                    self.pdiskSnapshotId)
     
-    def _sshDst(self, cmd, msg):
+    def _sshDst(self, cmd, errorMsg):
         retcode = sshCmdWithOutputQuiet(cmd, self.diskDstHost, pseudoTTY=True)
         if retcode == SSH_EXIT_STATUS_ERROR:
-            raise Exception(msg)
+            raise Exception(errorMsg)
         
     def _startCriticalSection(self, callFunc):
         self.defaultSignalHandler = signal(SIGINT, callFunc)
