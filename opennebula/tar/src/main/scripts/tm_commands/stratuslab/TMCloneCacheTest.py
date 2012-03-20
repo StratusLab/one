@@ -97,6 +97,31 @@ class TMCloneCacheTest(TestCase):
     def test_should_return_mp_endpoint(self):
         self.tm.diskSrc = 'http://marketplace:8383/path/image-id-xy/'
         self.assertEquals(self.tm._getMarketplaceEndpointFromURI(), 'http://marketplace:8383/')
+        
+    def test_should_raise_on_invalid_qemu_output(self):
+        qemuOutput = '''
+image: ttylinux-10.0-i486-base-1.0.img
+file format: raw
+virtual size: 31M
+disk size: 31M
+                     '''
+        self.assertRaises(ValueError, self.tm._getVirtualSizeBytesFromQemu, qemuOutput)
+        self.assertRaises(ValueError, self.tm._getVirtualSizeBytesFromQemu, 'invalid')
+        
+    def test_should_return_img_bytes(self):
+        qemuOutput = '''
+image: ttylinux-10.0-i486-base-1.0.img
+file format: raw
+virtual size: 31M (32768000 bytes)
+disk size: 31M
+                     '''
+        self.assertEqual(self.tm._getVirtualSizeBytesFromQemu(qemuOutput), 32768000)
+        
+    def test_should_return_at_least_1G(self):
+        self.assertEqual(self.tm._bytesToGiga(32768000), 1)
+        
+    def test_should_return_size_in_giga(self):
+        self.assertEqual(self.tm._bytesToGiga(327680000000), 305)
     
 if __name__ == '__main__':
     main()

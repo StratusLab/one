@@ -49,6 +49,9 @@ class TMCloneCache(object):
     
     _UNCOMPRESS_TOOL = {'gz': '/bin/gunzip',
                        'bz2': '/bin/bunzip2'}
+    
+    _CHECKSUM = 'sha1'
+    _CHECKSUM_CMD = '%ssum' % _CHECKSUM
 
     def __init__(self, args, **kwargs):
         self.args = args
@@ -61,7 +64,8 @@ class TMCloneCache(object):
         self.marketplaceImageID = None
         self.pdiskImageId = None
         self.pdiskSnapshotId = None
-        self.downloadedLocalImageLocation = None # New 
+        self.downloadedLocalImageLocation = None
+        self.downloadedLocalImageSize = 0
         
         self.configHolder = ConfigHolder({'verboseLevel': 0,
                                      'configFile': kwargs.get('config', defaultConfigFile)})
@@ -158,10 +162,13 @@ class TMCloneCache(object):
         if self._cacheMiss():
             self._retrieveAndCachePDiskImage()
         self._startCriticalSection(self._deletePDiskSnapshot)
-        self._createPDiskSnapshot()
-        self._setSnapshotOwner()
-        self._createDstPath()
-        self._clonePDisk(self._getPDiskSnapshotURL())
+        try:
+            self._createPDiskSnapshot()
+            self._setSnapshotOwner()
+            self._createDstPath()
+            self._clonePDisk(self._getPDiskSnapshotURL())
+        except:
+            self._deletePDiskSnapshot()
         self._endCriticalSection()
         
     def _setMarketplaceInfos(self):
@@ -210,9 +217,16 @@ class TMCloneCache(object):
         #marketplaceImageURI = self._getFullyQualifiedMarketplaceImage()
         self.manifestDownloader.downloadManifestByImageId(self.marketplaceImageID)
         self._startCriticalSection(self._deletePDiskSnapshot)
-        self._downloadImage()
-        self._uncompressImage()
+        try:
+            self._downloadImage()
+            self._uncompressDownloadedImage()
+            self._checkDownloadedImageChecksum()
+            self._getDowloadedImageSize()
+            self._createPDiskFromDowloadedImage()
+        except:
+            self._deletePDiskSnapshot()
         self._endCriticalSection()
+        self._deleteDownloadedImage()
     
     def _downloadImage(self):
         imageLocationOnServer = self.manifestDownloader.getImageLocations()
@@ -224,16 +238,56 @@ class TMCloneCache(object):
         self._sshDst(['curl', '-o', self.downloadedLocalImageLocation, imageLocationOnServer], 
                      'Unable to download "%"' % imageLocationOnServer)
     
-    def _uncompressImage(self):
+    def _uncompressDownloadedImage(self):
         compression = self._getImageCompressionType()
         if not compression:
             return
         uncompressTool = self._UNCOMPRESS_TOOL[compression]
+        self._sshDst([uncompressTool, self.downloadedLocalImageLocation],
+                     'Unable to uncompress image')
+        self.downloadedLocalImageLocation = self._removeExtension(self.downloadedLocalImageLocation)
         
-    
     def _getImageCompressionType(self):
         compression = self.manifestDownloader.getImageElementValue('compression')
         return compression
+        
+    def _removeExtension(self, filename):
+        return '.'.join(filename.split('.')[:-1])
+    
+    def _getDowloadedImageSize(self):
+        qemuImgInfo =self._sshDst(['qemu-img', 'info', self.downloadedLocalImageLocation], 
+                                  'Unable to get qemu image info')
+        self.downloadedLocalImageSize = self._bytesToGiga(self._getVirtualSizeBytesFromQemu(qemuImgInfo))
+        
+    def _checkDownloadedImageChecksum(self):
+        manifestChecksum = self.manifestDownloader.getImageElementValue(self._CHECKSUM)
+        computedChecksum = self._sshDst([self._CHECKSUM_CMD, self.downloadedLocalImageLocation], 'Unable to get image checksum')
+        computedChecksum = computedChecksum.split(' ')[0]
+        if manifestChecksum is not computedChecksum:
+            raise ValueError('Invalid image checksum')
+        
+    def _createPDiskFromDowloadedImage(self):
+        self.pdiskImageId = self.pdisk.createVolume(self.downloadedLocalImageSize, '', False)
+        self._setPDiskTag(self.pdiskImageId, self.pdiskImageId)
+        self._setNewPDiskReadOnly()
+        self._copyDownloadedImageToPartition()
+    
+    def _setNewPDiskReadOnly(self):
+        self.pdisk.updateVolume({'readonly': 'true'}, self.pdiskImageId)
+        
+    def _copyDownloadedImageToPartition(self):
+        imageFormat = self.manifestDownloader.getImageElementValue('format')
+        copyCmd = []
+        copyDst = '%s/%s' % (self.pdiskLVMDevice, self.pdiskImageId)
+        if imageFormat.startswith('qcow'):
+            copyCmd = ['cp', '-f', self.downloadedLocalImageLocation, copyDst] 
+        else:
+            copyCmd = ['dd', 'if=%s' % self.downloadedLocalImageLocation, 'of=%s' % copyDst, 'bs=2048']
+        self._sshDst(copyCmd, 'Unable to copy image')
+        
+    def _deleteDownloadedImage(self):
+        self._sshDst(['rm', '-f', self.downloadedLocalImageLocation], 
+                     'Unable to remove temporary image', True)
         
     def _getPDiskTempStore(self):
         store = self.config.getValue('persistent_disk_temp_store') or '/tmp'
@@ -244,11 +298,14 @@ class TMCloneCache(object):
     def _createPDiskSnapshot(self):
         snapshotTag = 'snapshot:%s' % self.pdiskImageId
         self.pdiskSnapshotId = self.pdisk.createCowVolume(self.pdiskImageId, None)
-        self.pdisk.updateVolume({'tag': snapshotTag}, self.pdiskSnapshotId)
+        self._setPDiskTag(snapshotTag, self.pdiskSnapshotId)
     
     def _setSnapshotOwner(self):
         owner = self._getInstanceOwner()
         self.pdisk.updateVolume({'owner': owner}, self.pdiskSnapshotId)
+    
+    def _setPDiskTag(self, tag, pdiskId):
+        self.pdisk.updateVolume({'tag': tag}, pdiskId)
     
     def _getInstanceOwner(self):
         credentials = LocalhostCredentialsConnector(self)
@@ -260,10 +317,29 @@ class TMCloneCache(object):
                                    self._PDISK_PORT,
                                    self.pdiskSnapshotId)
     
-    def _sshDst(self, cmd, errorMsg):
+    def _getVirtualSizeBytesFromQemu(self, qemuOutput):
+        for line in qemuOutput.split('\n'):
+            if line.lstrip().startswith('virtual'):
+                bytesAndOtherThings = line.split('(')
+                self._assertTwoElements(bytesAndOtherThings)
+                bytesAndUnit = bytesAndOtherThings[1].split(' ')
+                self._assertTwoElements(bytesAndUnit)
+                return int(bytesAndUnit[0])
+        raise ValueError('Unable to find image bytes size')
+                
+    def _assertTwoElements(self, theList):
+        if len(theList) != 2:
+            raise ValueError('List should have two elements, have "%s"' % theList)
+    
+    def _bytesToGiga(self, bytesAmout):
+        # Return at least 1GB
+        return bytesAmout / 1024**3 or 1
+    
+    def _sshDst(self, cmd, errorMsg, dontRaiseOnError=False):
         retcode = sshCmdWithOutputQuiet(cmd, self.diskDstHost, pseudoTTY=True)
-        if retcode == SSH_EXIT_STATUS_ERROR:
+        if not dontRaiseOnError and retcode == SSH_EXIT_STATUS_ERROR:
             raise Exception(errorMsg)
+        return retcode
         
     def _startCriticalSection(self, callFunc):
         self.defaultSignalHandler = signal(SIGINT, callFunc)
