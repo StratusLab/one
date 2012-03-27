@@ -35,6 +35,8 @@ DST_HOST=`arg_host $DST`
 
 INSTANCEID=$(basename $(dirname $(dirname $DST_PATH)))
 
+IDENTIFIER_KEY=identifier
+
 PDISKPORT=8445
 export STRATUSLAB_PDISK_ENDPOINT=$(stratus-config persistent_disk_ip)
 
@@ -72,8 +74,7 @@ function start_from_cow_snapshot() {
     mkdir -p $TMPSTORE
 
     log "Get PDISK ID from cache."
-    # NB! search may return more than one PDISK ID as the tag in not unique!
-    PDISKID=$(stratus-storage-search tag $IMAGEID)
+    PDISKID=$(stratus-storage-search $IDENTIFIER_KEY $IMAGEID)
     if [ "$?" -eq "0" ];then 
         if [ -z "$PDISKID" ]; then
             log "Cache miss. Image $IMAGEID not cached."
@@ -173,9 +174,9 @@ function start_from_cow_snapshot() {
             trap - EXIT
             # Critical section - end.
     
-            # Define tag for the base image (origin)
-            exec_and_log "stratus-storage-update $PDISKID tag $IMAGEID" \
-                 "Failed updating tag for $PDISKID disk" true
+            # Set identifier for the base image (origin)
+            exec_and_log "stratus-storage-update $PDISKID $IDENTIFIER_KEY $IMAGEID" \
+                 "Failed updating identifier for $PDISKID disk" true
 
             exec_and_log "stratus-storage-update $PDISKID isreadonly true" \
                  "Failed updating the disk storage" true
@@ -207,8 +208,8 @@ function start_from_cow_snapshot() {
     exec_and_log "stratus-storage --cow $PDISKID -t $IMAGEID" \
         "Failed to create snapshot of origin $PDISKID" true
     PDISKID_COW=$(echo $output | cut -d' ' -f 2)
-    # Define tag for the snapshot as the above -t doesn't work
-    exec_and_log "stratus-storage-update $PDISKID_COW tag snapshot:$PDISKID" \
+    # Define identifier for the snapshot as the above -t doesn't work
+    exec_and_log "stratus-storage-update $PDISKID_COW $IDENTIFIER_KEY snapshot:$PDISKID" \
          "Failed updating the disk storage" true
     log "Snapshot disk created: $PDISKID_COW"
     
