@@ -183,7 +183,12 @@ The validity of the signing certificate is $P12VALID days.\n
 \n
 Cheers.\n"
     
-    echo -e $EMAIL_TEXT | mail -s "New image created $IMAGEID." -a $MANIFEST_FILE_NOTSIGNED -r noreply@stratuslab.eu $CREATOR_EMAIL
+    REPLY_TO_EMAIL=$(stratus-config save_image_reply_to_email)
+    if [ "$?" != "0" ]; then
+        REPLY_TO_EMAIL="noreply@stratuslab.eu"
+    fi
+    
+    echo -e $EMAIL_TEXT | mail -s "New image created $IMAGEID." -a $MANIFEST_FILE_NOTSIGNED -r $REPLY_TO_EMAIL $CREATOR_EMAIL
 else
     log "Fatal: Couldn't send email to the image creator. Creator email was not provided."
 fi
