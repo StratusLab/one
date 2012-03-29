@@ -238,9 +238,10 @@ function start_from_persisted() {
     INSTANCEID=$(basename $(dirname $(dirname $DST_PATH)))
 
     UUID=${SRC##*:}
-    COW_FALSE=$(stratus-storage-search iscow false)
-    READONLY_FALSE=$(stratus-storage-search isreadonly false)
-    if ( echo $COW_FALSE | grep -q $UUID ) && ( echo $READONLY_FALSE | grep -q $UUID ); then
+    TYPE=$(stratus-storage-get $UUID type)
+    VISIBILITY=$(stratus-storage-get $UUID visibility)
+    DISK_NUMBER=${DST: -1:1}
+    if ( $TYPE = 'DATA_IMAGE_RAW_READONLY' ) || ( $TYPE = 'DATA_IMAGE_RAW_READ_WRITE' ); then
         DST_DIR=`dirname $DST_PATH`
         log "creating directory $DST_DIR"
         exec_and_log "$SSH -t -t $DST_HOST mkdir -p $DST_DIR" \
