@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #
 # Created as part of the StratusLab project (http://stratuslab.eu),
 # co-funded by the European Commission under the Grant Agreement
