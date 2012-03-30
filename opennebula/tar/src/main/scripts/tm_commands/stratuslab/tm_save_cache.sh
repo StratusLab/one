@@ -79,8 +79,8 @@ output=
 exec_and_log "stratus-storage --rebase $PDISKID_DISK0" \
     "Failed to rebase the snapshot $PDISKID_DISK0" true 
 PDISKID_NEW=$(echo $output | cut -d' ' -f 2)
-exec_and_log "stratus-storage-update $PDISKID_NEW tag $IMAGEID" \
-    "Failed to update tag on $PDISKID_NEW with $IMAGEID" true
+exec_and_log "stratus-storage-update $PDISKID_NEW identifier $IMAGEID" \
+    "Failed to update identifier on $PDISKID_NEW with $IMAGEID" true
 
 ## Build manifest for new image.
 function onexit() {
