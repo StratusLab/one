@@ -241,7 +241,11 @@ function start_from_persisted() {
     TYPE=$(stratus-storage-get $UUID type)
     VISIBILITY=$(stratus-storage-get $UUID visibility)
     DISK_NUMBER=${DST: -1:1}
-    if ( $TYPE = 'DATA_IMAGE_RAW_READONLY' ) || ( $TYPE = 'DATA_IMAGE_RAW_READ_WRITE' ); then
+    if ( $DISK_NUMBER = "0" ); then
+        exec_and_log "/bin/false" \
+            "Only extra/secondary drives can be attached directly from persistent storage."
+    fi
+    if [[ $TYPE = "DATA_IMAGE_RAW_READONLY" || $TYPE = "DATA_IMAGE_RAW_READ_WRITE" ]]; then
         DST_DIR=`dirname $DST_PATH`
         log "creating directory $DST_DIR"
         exec_and_log "$SSH -t -t $DST_HOST mkdir -p $DST_DIR" \
