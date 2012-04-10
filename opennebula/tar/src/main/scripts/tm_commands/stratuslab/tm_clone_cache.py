@@ -254,8 +254,8 @@ class TMCloneCache(object):
                      'Unable to attach persistent disk to %s' % self.diskDstPath)
     
     def _retrieveAndCachePDiskImage(self):
-        self._validateMarketplaceImagePolicy()
         self.manifestDownloader.downloadManifestByImageId(self.marketplaceImageId)
+        self._validateMarketplaceImagePolicy()
         self._startCriticalSection(self._deletePDiskSnapshot)
         try:
             self._downloadImage()
