@@ -190,7 +190,8 @@ class TMCloneCache(object):
         
     def _checkDownloadedImageChecksum(self):
         manifestChecksum = self.manifestDownloader.getImageElementValue(self._CHECKSUM)
-        computedChecksum = self._sshDst([self._CHECKSUM_CMD, self.downloadedLocalImageLocation], 'Unable to get image checksum')
+        computedChecksum = self._sshDst([self._CHECKSUM_CMD, self.downloadedLocalImageLocation], 
+                                        'Unable to get image checksum')
         computedChecksum = computedChecksum.split(' ')[0]
         if manifestChecksum != computedChecksum:
             raise ValueError('Invalid image checksum, is %s got %s' % (manifestChecksum, computedChecksum))
@@ -289,7 +290,7 @@ class TMCloneCache(object):
         self._setPDiskIdentifier(snapshotIdentifier, self.pdiskSnapshotId)
     
     def _setSnapshotOwner(self):
-        instanceId = self._getInstanceId()
+        instanceId = self._retrieveInstanceId()
         owner = self._getVMOwner(instanceId)
         self.pdisk.updateVolume({'owner': owner}, self.pdiskSnapshotId)
 
@@ -381,9 +382,8 @@ class TMCloneCache(object):
         cloud = CloudConnectorFactory.getCloud(credentials)
         cloud.setEndpointFromParts('localhost', self.config.onePort)
         return cloud.getVmOwner(instanceId)
-    
              
-    def _getInstanceId(self):
+    def _retrieveInstanceId(self):
         pathElems = self.diskDstPath.split('/')
         instanceId = self._findNumbers(pathElems)
         errorMsg = '%s instance ID in path. ' + 'Path is "%s"' % self.diskDstPath
@@ -410,7 +410,7 @@ if __name__ == '__main__':
         tm.run()
     except Exception, e:
         print '[%s ERROR] %s' % (basename(__file__), e)
-        if tm.PRINT_TRACE_ON_ERROR: 
+        if TMCloneCache.PRINT_TRACE_ON_ERROR: 
             raise
         sys.exit(1)
         
