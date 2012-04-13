@@ -410,7 +410,7 @@ if __name__ == '__main__':
         tm.run()
     except Exception, e:
         print >> sys.stderr, 'ERROR MESSAGE --8<------'
-        print '%s: %s' % (basename(__file__), e)
+        print >> sys.stderr, '%s: %s' % (basename(__file__), e)
         print >> sys.stderr, 'ERROR MESSAGE ------>8--'
         if TMCloneCache.PRINT_TRACE_ON_ERROR: 
             raise
