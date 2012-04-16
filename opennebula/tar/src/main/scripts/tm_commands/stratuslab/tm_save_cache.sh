@@ -77,11 +77,6 @@ sys.path.append('/var/lib/stratuslab/python/')
 from stratuslab.ManifestInfo import ManifestIdentifier
 print ManifestIdentifier().sha1ToIdentifier('$SHA1')")
 
-# Determine the size of the LV that should hold the new image.
-PDISKID_SIZE=$($SSH -t -t $STRATUSLAB_PDISK_ENDPOINT sudo /sbin/lvs --noheading -o lv_size --units G $SNAPSHOT_LV)
-PDISKID_SIZE=$(echo $PDISKID_SIZE | tr -d '\r')
-IMAGESIZE_G=$(echo $PDISKID_SIZE | cut -d'.' -f1)
-
 log "Requesting rebase of the snapshot: $PDISKID_DISK0"
 output=
 exec_and_log "stratus-storage --rebase $PDISKID_DISK0" \
