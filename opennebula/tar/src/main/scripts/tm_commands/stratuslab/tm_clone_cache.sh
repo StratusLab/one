@@ -27,6 +27,14 @@ fi
 
 . $TMCOMMON
 
+do_abort()
+{
+  if [ "${1}" -ne "0" ]; then
+    log "ERROR: ${2}"
+    exit ${1}
+  fi
+}
+
 SRC_PATH=`arg_path $SRC`
 DST_PATH=`arg_path $DST`
 
@@ -45,6 +53,7 @@ function start_from_cow_snapshot() {
     log "Applying policy on $SRC"
     # Obtain Marketplace endpoint based on provided source
     IMAGEID=${SRC##*/}
+    MARKETPLACE_ENDPOINT=
     case $SRC in
     http://*)
         # Extract hostname:port from source URL
@@ -57,11 +66,14 @@ function start_from_cow_snapshot() {
 
         # Local Markeptlace should be defined in StratuLab configuration file
         output=
-        exec_and_log "stratus-config marketplace_endpoint" \
+        exec_and_log "stratus-config marketplace_endpoint_local" \
             "Failed to get Marketplace endpoint from StratusLab configuration file." true
         MARKETPLACE_ENDPOINT=$output
         ;;
     esac
+    [ -z "$MARKETPLACE_ENDPOINT" ] && \
+        do_abort 1 "Failed to get Marketplace endpoint to be used with image policy check."
+
     # Retrieve the first fully qualified validated Marketplace identifier 
     output=
     exec_and_log "stratus-policy-image --marketplace-endpoint $MARKETPLACE_ENDPOINT $IMAGEID" \
