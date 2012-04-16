@@ -27,6 +27,14 @@ fi
 
 . $TMCOMMON
 
+do_abort()
+{
+  if [ "${1}" -ne "0" ]; then
+    log "ERROR: ${2}"
+    exit ${1}
+  fi
+}
+
 SRC_PATH=`arg_path $SRC`
 DST_PATH=`arg_path $DST`
 
@@ -102,14 +110,13 @@ MANIFEST_FILE_NOTSIGNED=$MANIFEST_DIR/manifest-not-signed.xml
 
 ORIGIN_IMAGEID_URL=$(onevm show $INSTANCEID|awk '/DISK_ID=0/,/]/'|awk -F= '/SOURCE/, sub(/\,/,"") {print $2}')
 ORIGIN_IMAGEID=${ORIGIN_IMAGEID_URL##*/}
-# should come from ONE devployment script via 'onevm show <ID>'
-ORIGIN_MARKETPLACE=$(echo $ORIGIN_IMAGEID_URL | awk -F/ '{print $1"/"$2"/"$3}')
 
 # NB! Requires: the following attributes. Should be provided via ONE deployment script.
 #CREATOR_EMAIL=
 #CREATOR_NAME=
 #NEWIMAGE_VERSION=
 #NEWIMAGE_COMMENT=
+#NEWIMAGE_MARKETPLACE=
 # Optinal attributes
 #MSG_TYPE=
 #MSG_ENDPOINT=
@@ -124,6 +131,32 @@ VARS=`cat $MANIFEST_INFO_VARS | egrep -e '^[A-Z]*=' | sed 's/=.*$//'`
 for v in $VARS; do
   export $v
 done
+
+# Define target Markteplace with the following order of precedence: 
+#  1. defined by user in CREATE_IMAGE
+#  2. defined in stratuslab.cfg by site admin as marketplace_endpoint_local
+#  3. same as of origin if full Marketplace ID URL was provided as source 
+MARKETPLACE_TARGET=
+if [ -n "$NEWIMAGE_MARKETPLACE" ]; then
+    MARKETPLACE_TARGET=$NEWIMAGE_MARKETPLACE
+else
+
+    MARKETPLACE_TARGET=$(stratus-config marketplace_endpoint_local 2>/dev/null || true)
+
+    if [ -z "$MARKETPLACE_TARGET" ]; then
+    	
+	    case $ORIGIN_IMAGEID_URL in
+	    http://*) # started with full Marketplace ID URL
+                 MARKETPLACE_TARGET=$(echo $ORIGIN_IMAGEID_URL | awk -F/ '{print $1"/"$2"/"$3}')
+	             ;;
+	           *) # otherwise, take the local Marketplace endpoint
+	             MARKETPLACE_TARGET=$(stratus-config marketplace_endpoint_local 2>/dev/null || true)
+	             ;;
+	    esac
+    fi
+fi
+[ -z "$MARKETPLACE_TARGET" ] && \
+    do_abort 1 "Target Marketplace for new image manifest registration was not provided."
 
 IMAGE_VALIDITY_HOURS=$(( 24 * $P12VALID ))
 
@@ -163,7 +196,7 @@ c._signManifest()"
 cp -f ${MANIFEST_FILE}.orig $MANIFEST_FILE_NOTSIGNED
 
 # Upload manifest to MarketPlace
-stratus-upload-metadata --marketplace-endpoint=$ORIGIN_MARKETPLACE $MANIFEST_FILE
+stratus-upload-metadata --marketplace-endpoint=$MARKETPLACE_TARGET $MANIFEST_FILE
 
 # Send email to user
 if [ -n "$CREATOR_EMAIL" ]; then
