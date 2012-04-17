@@ -267,7 +267,7 @@ class TMCloneCache(object):
             self._copyDownloadedImageToPartition()
         except:
             self._deletePDiskSnapshot()
-            raise Exception('Unable to retrieve and cache pdisk image')
+            raise
         self._endCriticalSection()
         self._deleteDownloadedImage()
         
