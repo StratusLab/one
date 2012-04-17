@@ -173,6 +173,10 @@ class TMCloneCache(object):
     def _uncompressDownloadedImage(self):
         compression = self._getImageCompressionType()
         if not compression:
+            if self.downloadedLocalImageLocation.endswith('.gz'):
+                raise ValueError('Manifest doesn\'t contain a compression element but ' \
+                                 'the location element specified ends with .gz. This is likely ' \
+                                 'an error.')
             return
         uncompressTool = self._UNCOMPRESS_TOOL[compression]
         self._sshDst([uncompressTool, self.downloadedLocalImageLocation],
