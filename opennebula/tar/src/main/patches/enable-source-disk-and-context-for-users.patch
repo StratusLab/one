@@ -1,18 +1,14 @@
-commit 07a0320a66226ba28d5570acc50c533994610d5d
-Author: Javi Fontan <jfontan@gmail.com>
-Date:   Wed Apr 11 12:59:05 2012 +0200
-
-    stratuslab: enable source disk parameter for users
-
 diff --git a/src/vm/VirtualMachineTemplate.cc b/src/vm/VirtualMachineTemplate.cc
-index cfac858..58e1fa4 100644
+index cfac858..8153a7e 100644
 --- a/src/vm/VirtualMachineTemplate.cc
 +++ b/src/vm/VirtualMachineTemplate.cc
-@@ -22,13 +22,13 @@
+@@ -21,14 +21,14 @@
+ /* -------------------------------------------------------------------------- */
  
  const string VirtualMachineTemplate::RESTRICTED_ATTRIBUTES[] = {
- 	"CONTEXT/FILES",
+-	"CONTEXT/FILES",
 -	"DISK/SOURCE",
++//	"CONTEXT/FILES",
 +//	"DISK/SOURCE",
  	"NIC/MAC",
  	"NIC/VLAN_ID",
@@ -20,7 +16,7 @@ index cfac858..58e1fa4 100644
  };
  
 -const int VirtualMachineTemplate::RS_ATTRS_LENGTH = 5;
-+const int VirtualMachineTemplate::RS_ATTRS_LENGTH = 4;
++const int VirtualMachineTemplate::RS_ATTRS_LENGTH = 3;
  	
  /* -------------------------------------------------------------------------- */
  /* -------------------------------------------------------------------------- */
