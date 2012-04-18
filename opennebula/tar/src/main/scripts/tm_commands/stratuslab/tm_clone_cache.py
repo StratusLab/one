@@ -57,7 +57,8 @@ class TMCloneCache(object):
     _CHECKSUM = 'sha1'
     _CHECKSUM_CMD = '%ssum' % _CHECKSUM
     
-    _ACCEPTED_DISK_TYPE = ('DATA_IMAGE_RAW_READONLY', 'DATA_IMAGE_RAW_READ_WRITE')
+    _ACCEPTED_EXTRA_DISK_TYPE = ('DATA_IMAGE_RAW_READONLY', 'DATA_IMAGE_RAW_READ_WRITE')
+    _ACCEPTED_ROOT_DISK_TYPE = ('MACHINE_IMAGE_LIVE')
         
     _IDENTIFIER_KEY = 'identifier'
 
@@ -113,25 +114,31 @@ class TMCloneCache(object):
         diskId = self._getStringPart(self.diskSrc, -1, 4)
         diskType = self.pdisk.getValue('type', diskId)
         
-        if self._getDiskPosition(self.diskDstPath) is 0:
-            raise Exception('Only extra/secondary drives can be attached' + 
-                            'directly from persistent storage.')
-        
-        if diskType not in self._ACCEPTED_DISK_TYPE:
-            raise Exception('Failed booting from "%s". Check that you are the' + 
-                            ' owner of the disk, the disk is not readonly and' +
-                            ' not a snapshot.' % self.diskSrc)
+        is_root_disk = self._getDiskIndex(self.diskDstPath) is 0
+        if is_root_disk:
+            self._checkBootDisk(diskId, diskType)
+        elif diskType not in self._ACCEPTED_EXTRA_DISK_TYPE:
+            raise ValueError('Only %s type disks can be attached as extra disks'
+                             % self._ACCEPTED_EXTRA_DISK_TYPE.join(', '))
         
         self._createDestinationDir()
         self._attachPDisk(self.diskSrc)
             
+    def _checkBootDisk(self, diskId, diskType):
+        is_live_machine_disk = diskType in _ACCEPTED_ROOT_DISK_TYPE
+        user_count = self.pdisk.getVolumeUserCount(diskId)
+
+        if not is_live_machine_disk:
+            raise Exception('Only a live persistent disk can be booted from.')
+        if user_count != 0:
+            raise Exception('User count must be zero on the live disk to boot from.')
+
     def _startFromCowSnapshot(self):
         self._retrieveMarketplaceInfos()
         
         if self._cacheMiss():
             self._retrieveAndCachePDiskImage()
             
-        self._startCriticalSection(self._deletePDiskSnapshot)
         try:
             self._createPDiskSnapshot()
             self._setSnapshotOwner()
@@ -140,7 +147,6 @@ class TMCloneCache(object):
         except:
             self._deletePDiskSnapshot()
             raise
-        self._endCriticalSection()
     
     # -------------------------------------------
     # Cache management and related
@@ -156,7 +162,7 @@ class TMCloneCache(object):
     def _createDestinationDir(self):
         dstDir = dirname(self.diskDstPath)
         self._sshDst(['mkdir', '-p', dstDir],
-                     'Unable to create directory %s' % dstDir)
+                      'Unable to create directory %s' % dstDir)
     
     def _downloadImage(self):
         imageLocations = self.manifestDownloader.getImageLocations()
@@ -167,8 +173,8 @@ class TMCloneCache(object):
         self.downloadedLocalImageLocation = '%s/%s.%s' % (pdiskTmpStore,
                                                           int(time()),
                                                           imageName)
-        self._sshDst(['curl', '-o', self.downloadedLocalImageLocation, imageMarketplaceLocation], 
-                     'Unable to download "%s"' % imageMarketplaceLocation)
+        self._sshPDisk(['curl', '-o', self.downloadedLocalImageLocation, imageMarketplaceLocation], 
+                        'Unable to download "%s"' % imageMarketplaceLocation)
     
     def _uncompressDownloadedImage(self):
         compression = self._getImageCompressionType()
@@ -179,8 +185,8 @@ class TMCloneCache(object):
                                  'an error.')
             return
         uncompressTool = self._UNCOMPRESS_TOOL[compression]
-        self._sshDst([uncompressTool, self.downloadedLocalImageLocation],
-                     'Unable to uncompress image')
+        self._sshPDisk([uncompressTool, self.downloadedLocalImageLocation],
+                       'Unable to uncompress image')
         self.downloadedLocalImageLocation = self._removeExtension(self.downloadedLocalImageLocation)
         
     def _getImageCompressionType(self):
@@ -188,13 +194,13 @@ class TMCloneCache(object):
         return compression
     
     def _retrieveDowloadedImageSize(self):
-        qemuImgInfo =self._sshDst(['qemu-img', 'info', self.downloadedLocalImageLocation], 
-                                  'Unable to get qemu image info')
+        qemuImgInfo =self._sshPDisk(['qemu-img', 'info', self.downloadedLocalImageLocation], 
+                                     'Unable to get qemu image info')
         self.downloadedLocalImageSize = self._bytesToGiga(self._getVirtualSizeBytesFromQemu(qemuImgInfo))
         
     def _checkDownloadedImageChecksum(self):
         manifestChecksum = self.manifestDownloader.getImageElementValue(self._CHECKSUM)
-        computedChecksum = self._sshDst([self._CHECKSUM_CMD, self.downloadedLocalImageLocation], 
+        computedChecksum = self._sshPDisk([self._CHECKSUM_CMD, self.downloadedLocalImageLocation], 
                                         'Unable to get image checksum')
         computedChecksum = computedChecksum.split(' ')[0]
         if manifestChecksum != computedChecksum:
@@ -208,10 +214,10 @@ class TMCloneCache(object):
             copyCmd = imageFormat.startswith('qcow') and ['cp', '-f', self.downloadedLocalImageLocation, copyDst] 
         else:
             copyCmd = ['dd', 'if=%s' % self.downloadedLocalImageLocation, 'of=%s' % copyDst, 'bs=2048']
-        self._sshDst(copyCmd, 'Unable to copy image')
+        self._sshPDisk(copyCmd, 'Unable to copy image')
         
     def _deleteDownloadedImage(self):
-        self._sshDst(['rm', '-f', self.downloadedLocalImageLocation], 
+        self._sshPDisk(['rm', '-f', self.downloadedLocalImageLocation], 
                      'Unable to remove temporary image', True)
     
     # -------------------------------------------
@@ -261,7 +267,6 @@ class TMCloneCache(object):
     def _retrieveAndCachePDiskImage(self):
         self.manifestDownloader.downloadManifestByImageId(self.marketplaceImageId)
         self._validateMarketplaceImagePolicy()
-        self._startCriticalSection(self._deletePDiskSnapshot)
         try:
             self._downloadImage()
             self._uncompressDownloadedImage()
@@ -272,8 +277,11 @@ class TMCloneCache(object):
         except:
             self._deletePDiskSnapshot()
             raise
-        self._endCriticalSection()
-        self._deleteDownloadedImage()
+        finally:
+            try:
+                self._deleteDownloadedImage()
+            except:
+                pass
         
     def _createPDiskFromDowloadedImage(self):
         self.pdiskImageId = self.pdisk.createVolume(self.downloadedLocalImageSize, '', False)
@@ -313,6 +321,7 @@ class TMCloneCache(object):
         if self.pdiskSnapshotId is None:
             return
         try:
+            #FIXME: why do we need to set credentials here?
             self.pdisk._setPDiskUserCredentials()
             self.pdisk.deleteVolume(self.pdiskSnapshotId)
         except:
@@ -355,11 +364,11 @@ class TMCloneCache(object):
                 pass
         return findedNb
     
-    def _getDiskPosition(self, diskPath):
+    def _getDiskIndex(self, diskPath):
         try:
             return int(diskPath.split('.')[-1])
         except:
-            raise ValueError('Unable to determine disk position')
+            raise ValueError('Unable to determine disk index')
                 
     def _assertLength(self, elements, length=2, errorMsg=None, atLeast=False):
         nbElem = len(elements)
@@ -377,6 +386,13 @@ class TMCloneCache(object):
     def _sshDst(self, cmd, errorMsg, dontRaiseOnError=False):
         retCode, output = sshCmdWithOutput(' '.join(cmd), self.diskDstHost, user=getuser(),
                                            sshKey=sshPublicKeyLocation.replace('.pub', ''))
+        if not dontRaiseOnError and retCode != 0:
+            raise Exception('%s\n: Error: %s' % (errorMsg, output))
+        return output
+        
+    def _sshPDisk(self, cmd, errorMsg, dontRaiseOnError=False):
+        retCode, output = sshCmdWithOutput(' '.join(cmd), self.persistentDiskIp, user=getuser(),
+                                           sshKey=persistentDiskPrivateKey.replace('.pub', ''))
         if not dontRaiseOnError and retCode != 0:
             raise Exception('%s\n: Error: %s' % (errorMsg, output))
         return output
@@ -401,17 +417,10 @@ class TMCloneCache(object):
         # POP two times if trailing slash
         return fragments.pop() or fragments.pop()
         
-    def _startCriticalSection(self, callFunc):
-        self.defaultSignalHandler = signal(SIGINT, callFunc)
-        
-    def _endCriticalSection(self):
-        signal(SIGINT, self.defaultSignalHandler)
-        
-        
+                
 if __name__ == '__main__':
     try:
-        tm = TMCloneCache(sys.argv)
-        tm.run()
+        tm = TMCloneCache(sys.argv).run()
     except Exception, e:
         print >> sys.stderr, 'ERROR MESSAGE --8<------'
         print >> sys.stderr, '%s: %s' % (basename(__file__), e)
