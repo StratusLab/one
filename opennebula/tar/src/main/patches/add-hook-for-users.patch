@@ -1,0 +1,360 @@
+commit 302f34ac8ae74fd5092074304fb9a943fb71417e
+Author: Javi Fontan <jfontan@gmail.com>
+Date:   Thu Apr 12 17:01:31 2012 +0200
+
+    stratuslab: add hook for users
+    
+    The hook can be triggered on creation or update, like password change
+
+diff --git a/include/UserHook.h b/include/UserHook.h
+new file mode 100644
+index 0000000..e5f8881
+--- /dev/null
++++ b/include/UserHook.h
+@@ -0,0 +1,54 @@
++/* -------------------------------------------------------------------------- */
++/* Copyright 2002-2012, OpenNebula Project Leads (OpenNebula.org)             */
++/*                                                                            */
++/* Licensed under the Apache License, Version 2.0 (the "License"); you may    */
++/* not use this file except in compliance with the License. You may obtain    */
++/* a copy of the License at                                                   */
++/*                                                                            */
++/* http://www.apache.org/licenses/LICENSE-2.0                                 */
++/*                                                                            */
++/* Unless required by applicable law or agreed to in writing, software        */
++/* distributed under the License is distributed on an "AS IS" BASIS,          */
++/* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   */
++/* See the License for the specific language governing permissions and        */
++/* limitations under the License.                                             */
++/* -------------------------------------------------------------------------- */
++
++#ifndef USER_HOOK_H_
++#define USER_HOOK_H_
++
++#include <vector>
++#include <string>
++
++#include "Hook.h"
++#include "User.h"
++
++using namespace std;
++
++/**
++ *  This class is general User Hook that executes a command when the
++ *  User is inserted in the database. The User object is looked
++ */
++class UserGenericHook : public Hook
++{
++public:
++    // -------------------------------------------------------------------------
++    // Init a LOCAL hook
++    // -------------------------------------------------------------------------
++    UserGenericHook(int type,
++                     const string& name,
++                     const string& cmd,
++                     const string& args,
++                     bool          remote):
++        Hook(name, cmd, args, type, remote){};
++
++    ~UserGenericHook(){};
++
++    // -------------------------------------------------------------------------
++    // Hook methods
++    // -------------------------------------------------------------------------
++
++    void do_hook(void *arg);
++};
++#endif
++
+diff --git a/include/UserPool.h b/include/UserPool.h
+index 3926c71..d1bf4e7 100644
+--- a/include/UserPool.h
++++ b/include/UserPool.h
+@@ -40,6 +40,9 @@ class UserPool : public PoolSQL
+ public:
+ 
+     UserPool(SqlDB * db,
++             vector<const Attribute *> hook_mads,
++             const string&             hook_location,
++             const string&             remotes_location,
+              time_t  __session_expiration_time);
+ 
+     ~UserPool(){};
+diff --git a/share/etc/oned.conf b/share/etc/oned.conf
+index 63c0b70..08b9b38 100644
+--- a/share/etc/oned.conf
++++ b/share/etc/oned.conf
+@@ -394,6 +394,21 @@ IMAGE_MAD = [
+ #   remote    : values,
+ #               - YES, The hook is executed in the host
+ #               - NO, The hook is executed in the OpenNebula server (default)
++#
++#
++# User Hooks (USER_HOOK) defined by:
++#   name      : for the hook, useful to track the hook (OPTIONAL)
++#   on        : when the hook should be executed,
++#               - CREATE, when the User is created (oneuser create)
++#               - UPDATE, when the User is modified
++#   command   : path is relative to $ONE_LOCATION/var/remotes/hook
++#               (self-contained) or to /var/lib/one/remotes/hook (system-wide).
++#               That directory will be copied on the hosts under
++#               SCRIPTS_REMOTE_DIR. It can be an absolute path that must exist
++#               on the target host.
++#   arguments : for the hook. You can use the following User information:
++#               - $UID, the ID of the user
++#               - $TEMPLATE, the User template in xml and base64 encoded
+ #-------------------------------------------------------------------------------
+ 
+ HM_MAD = [
+@@ -438,6 +453,18 @@ HM_MAD = [
+ #   arguments = "$VMID" ]
+ #-------------------------------------------------------------------------------
+ 
++#USER_HOOK = [
++#    name      = "new_user",
++#    on        = "CREATE",
++#    command   = "user",
++#    arguments = "create $UID $TEMPLATE"]
++#
++#USER_HOOK = [
++#    name      = "change_user",
++#    on        = "UPDATE",
++#    command   = "user",
++#    arguments = "update $UID $TEMPLATE"]
++
+ #*******************************************************************************
+ # Auth Manager Configuration
+ #*******************************************************************************
+diff --git a/src/nebula/Nebula.cc b/src/nebula/Nebula.cc
+index 785e485..900d560 100644
+--- a/src/nebula/Nebula.cc
++++ b/src/nebula/Nebula.cc
+@@ -276,9 +276,11 @@ void Nebula::start()
+ 
+         vector<const Attribute *> vm_hooks;
+         vector<const Attribute *> host_hooks;
++        vector<const Attribute *> user_hooks;
+ 
+         nebula_configuration->get("VM_HOOK", vm_hooks);
+         nebula_configuration->get("HOST_HOOK", host_hooks);
++        nebula_configuration->get("USER_HOOK", user_hooks);
+ 
+         vmpool = new VirtualMachinePool(db, 
+                                         vm_hooks, 
+@@ -293,7 +295,8 @@ void Nebula::start()
+         gpool  = new GroupPool(db);
+ 
+         nebula_configuration->get("SESSION_EXPIRATION_TIME", expiration_time);
+-        upool  = new UserPool(db, expiration_time);
++        upool  = new UserPool(db, user_hooks, hook_location, remotes_location,
++            expiration_time);
+ 
+         nebula_configuration->get("DEFAULT_IMAGE_TYPE", default_image_type);
+         nebula_configuration->get("DEFAULT_DEVICE_PREFIX",
+diff --git a/src/um/SConstruct b/src/um/SConstruct
+index 175d2c5..37f743f 100644
+--- a/src/um/SConstruct
++++ b/src/um/SConstruct
+@@ -23,7 +23,8 @@ lib_name='nebula_um'
+ # Sources to generate the library
+ source_files=[
+     'User.cc',
+-    'UserPool.cc'
++    'UserPool.cc',
++    'UserHook.cc'
+ ]
+ 
+ # Build library
+diff --git a/src/um/UserHook.cc b/src/um/UserHook.cc
+new file mode 100644
+index 0000000..85e1093
+--- /dev/null
++++ b/src/um/UserHook.cc
+@@ -0,0 +1,83 @@
++/* -------------------------------------------------------------------------- */
++/* Copyright 2002-2012, OpenNebula Project Leads (OpenNebula.org)             */
++/*                                                                            */
++/* Licensed under the Apache License, Version 2.0 (the "License"); you may    */
++/* not use this file except in compliance with the License. You may obtain    */
++/* a copy of the License at                                                   */
++/*                                                                            */
++/* http://www.apache.org/licenses/LICENSE-2.0                                 */
++/*                                                                            */
++/* Unless required by applicable law or agreed to in writing, software        */
++/* distributed under the License is distributed on an "AS IS" BASIS,          */
++/* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   */
++/* See the License for the specific language governing permissions and        */
++/* limitations under the License.                                             */
++/* -------------------------------------------------------------------------- */
++
++#include "UserHook.h"
++#include "User.h"
++#include "Nebula.h"
++
++// -----------------------------------------------------------------------------
++// -----------------------------------------------------------------------------
++static void parse_user_arguments(User *user, string& parsed)
++{
++    size_t  found;
++
++    found = parsed.find("$UID");
++
++    if ( found !=string::npos )
++    {
++        ostringstream oss;
++        oss << user->get_oid();
++
++        parsed.replace(found,4,oss.str());
++    }
++
++    found = parsed.find("$TEMPLATE");
++
++    if ( found != string::npos )
++    {
++        string templ;
++        parsed.replace(found,9,user->to_xml64(templ));
++    }
++}
++// -----------------------------------------------------------------------------
++// -----------------------------------------------------------------------------
++
++void UserGenericHook::do_hook(void *arg)
++{
++    User *  user;
++
++    string  parsed_args = args;
++
++    user = static_cast<User *>(arg);
++
++    if ( user == 0 )
++    {
++        return;
++    }
++
++    parse_user_arguments(user,parsed_args);
++
++    Nebula& ne                    = Nebula::instance();
++    HookManager * hm              = ne.get_hm();
++    const HookManagerDriver * hmd = hm->get();
++
++    if ( hmd != 0 )
++    {
++        if ( remote == true )
++        {
++            hmd->execute(user->get_oid(),
++                         name,
++                         user->get_name(),
++                         cmd,
++                         parsed_args);
++        }
++        else
++        {
++            hmd->execute(user->get_oid(),name,cmd,parsed_args);
++        }
++    }
++}
++
+diff --git a/src/um/UserPool.cc b/src/um/UserPool.cc
+index 49598ed..4a784eb 100644
+--- a/src/um/UserPool.cc
++++ b/src/um/UserPool.cc
+@@ -19,6 +19,7 @@
+ /* ************************************************************************** */
+ 
+ #include "UserPool.h"
++#include "UserHook.h"
+ #include "NebulaLog.h"
+ #include "Nebula.h"
+ #include "AuthManager.h"
+@@ -49,6 +50,9 @@ time_t UserPool::_session_expiration_time;
+ /* -------------------------------------------------------------------------- */
+ 
+ UserPool::UserPool(SqlDB * db,
++                   vector<const Attribute *> hook_mads,
++                   const string&             hook_location,
++                   const string&             remotes_location,
+                    time_t  __session_expiration_time):
+                        PoolSQL(db,User::table)
+ {
+@@ -70,10 +74,81 @@ UserPool::UserPool(SqlDB * db,
+     string        error_str;
+     stringstream  sstr;
+ 
++    // Hook variables
++    const VectorAttribute * vattr;
++
++    string name;
++    string on;
++    string cmd;
++    string arg;
++    bool   remote;
++
+     Nebula& nd   = Nebula::instance();
+ 
+     _session_expiration_time = __session_expiration_time;
+ 
++    // Hook initialization
++    for (unsigned int i = 0 ; i < hook_mads.size() ; i++ )
++    {
++        vattr = static_cast<const VectorAttribute *>(hook_mads[i]);
++
++        name = vattr->vector_value("NAME");
++        on   = vattr->vector_value("ON");
++        cmd  = vattr->vector_value("COMMAND");
++        arg  = vattr->vector_value("ARGUMENTS");
++
++        transform (on.begin(),on.end(),on.begin(),(int(*)(int))toupper);
++
++        if ( on.empty() || cmd.empty() )
++        {
++            ostringstream oss;
++
++            oss << "Empty ON or COMMAND attribute in USER_HOOK. Hook "
++                << "not registered!";
++            NebulaLog::log("ONE",Log::WARNING,oss);
++
++            continue;
++        }
++
++        if ( name.empty() )
++        {
++            name = cmd;
++        }
++
++        remote = false;
++
++        if (cmd[0] != '/')
++        {
++            ostringstream cmd_os;
++
++            if ( remote )
++            {
++                cmd_os << hook_location << "/" << cmd;
++            }
++            else
++            {
++                cmd_os << remotes_location << "/hooks/" << cmd;
++            }
++
++            cmd = cmd_os.str();
++        }
++
++        if ( on == "CREATE" )
++        {
++            UserGenericHook * hook;
++
++            hook = new UserGenericHook(Hook::ALLOCATE, name,cmd,arg,remote);
++
++            add_hook(hook);
++        } else if ( on == "UPDATE" ){
++            UserGenericHook * hook;
++
++            hook = new UserGenericHook(Hook::UPDATE, name,cmd,arg,remote);
++
++            add_hook(hook);
++        }
++    }
++
+     if (get(0,false) != 0)
+     {
+         return;
