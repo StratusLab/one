@@ -1,8 +1,8 @@
 diff --git a/include/VirtualMachine.h b/include/VirtualMachine.h
-index 8e8c8b6..dc57aa2 100644
+index 8df9a9b..f51c901 100644
 --- a/include/VirtualMachine.h
 +++ b/include/VirtualMachine.h
-@@ -626,6 +626,12 @@ public:
+@@ -647,6 +647,12 @@ public:
      // Network Leases & Disk Images
      // ------------------------------------------------------------------------
      /**
@@ -16,7 +16,7 @@ index 8e8c8b6..dc57aa2 100644
       *  @return 0 if success
       */
 diff --git a/src/dm/DispatchManagerActions.cc b/src/dm/DispatchManagerActions.cc
-index 93d95a4..6990093 100644
+index 7294dad..1b281c0 100644
 --- a/src/dm/DispatchManagerActions.cc
 +++ b/src/dm/DispatchManagerActions.cc
 @@ -47,7 +47,24 @@ int DispatchManager::deploy (
@@ -46,13 +46,13 @@ index 93d95a4..6990093 100644
          lcm->trigger(LifeCycleManager::DEPLOY,vid);
      }
 diff --git a/src/vm/VirtualMachine.cc b/src/vm/VirtualMachine.cc
-index 99a082c..5b565cb 100644
+index fa6ac03..e5092e0 100644
 --- a/src/vm/VirtualMachine.cc
 +++ b/src/vm/VirtualMachine.cc
-@@ -809,6 +809,40 @@ void VirtualMachine::release_disk_images()
- /* -------------------------------------------------------------------------- */
- /* -------------------------------------------------------------------------- */
+@@ -874,6 +874,39 @@ void VirtualMachine::release_disk_images()
  
+ /* -------------------------------------------------------------------------- */
+ /* -------------------------------------------------------------------------- */
 +int VirtualMachine::log_network_leases()
 +{
 +    int                   num_nics;
@@ -86,21 +86,20 @@ index 99a082c..5b565cb 100644
 +
 +    return 0;
 +}
-+
+ 
  int VirtualMachine::get_network_leases(string& estr)
  {
-     int                   num_nics, rc;
-@@ -834,7 +868,7 @@ int VirtualMachine::get_network_leases(string& estr)
+@@ -900,7 +933,7 @@ int VirtualMachine::get_network_leases(string& estr)
  
          if (rc == -1)
          {
 -            goto error_vnet; 
 +            goto error_vnet;
          }
-         else if ( rc == -3 )
-         {
-@@ -908,6 +942,14 @@ void VirtualMachine::release_network_leases()
-         vnpool->update(vn);
+     }
+ 
+@@ -967,6 +1000,14 @@ void VirtualMachine::release_network_leases()
+         }
  
          vn->unlock();
 +
