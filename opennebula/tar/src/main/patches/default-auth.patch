@@ -40,7 +40,7 @@ index 4dcf332..086c967 100755
      for d in `echo $DELETE_DIRS | awk '{for (i=NF;i>=1;i--) printf $i" "}'`; do
          rmdir $d
 diff --git a/src/authm_mad/remotes/default/authenticate b/src/authm_mad/remotes/default/authenticate
-new file mode 100644
+new file mode 100755
 index 0000000..66c50a8
 --- /dev/null
 +++ b/src/authm_mad/remotes/default/authenticate
@@ -84,28 +84,3 @@ index 0917ac6..66c50a8 100755
  
  
  
-diff --git a/src/vm/VirtualMachineTemplate.cc b/src/vm/VirtualMachineTemplate.cc
-index cfac858..64fd50a 100644
---- a/src/vm/VirtualMachineTemplate.cc
-+++ b/src/vm/VirtualMachineTemplate.cc
-@@ -21,14 +21,14 @@
- /* -------------------------------------------------------------------------- */
- 
- const string VirtualMachineTemplate::RESTRICTED_ATTRIBUTES[] = {
--	"CONTEXT/FILES",
--	"DISK/SOURCE",
--	"NIC/MAC",
--	"NIC/VLAN_ID",
--	"RANK"
-+//	"CONTEXT/FILES",
-+//	"DISK/SOURCE",
-+//	"NIC/MAC",
-+	"NIC/VLAN_ID"
-+//	"RANK"
- };
- 
--const int VirtualMachineTemplate::RS_ATTRS_LENGTH = 5;
-+const int VirtualMachineTemplate::RS_ATTRS_LENGTH = 1;
- 	
- /* -------------------------------------------------------------------------- */
- /* -------------------------------------------------------------------------- */
