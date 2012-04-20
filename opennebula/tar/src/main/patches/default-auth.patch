@@ -35,7 +35,7 @@ index 4dcf332..086c967 100755
      fi
 +
 +    # Default auth script
-+    chmod a+x /var/lib/one/remotes/default/authenticate
++    chmod a+x $VAR_LOCATION/remotes/auth/default/authenticate
  else
      for d in `echo $DELETE_DIRS | awk '{for (i=NF;i>=1;i--) printf $i" "}'`; do
          rmdir $d
