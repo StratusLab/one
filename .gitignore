@@ -2,3 +2,7 @@ target
 *~
 #*
 bin
+*.pyc
+*.swp
+.project
+.pydevproject
