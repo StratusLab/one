@@ -332,7 +332,6 @@ class TMCloneCache(object):
                                    self.pdiskSnapshotId)
         
     def _deletePDiskSnapshot(self, *args, **kwargs):
-        return
         if self.pdiskSnapshotId is None:
             return
         try:
