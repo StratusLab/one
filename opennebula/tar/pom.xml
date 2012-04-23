@@ -2,14 +2,14 @@
          
   <modelVersion>4.0.0</modelVersion>
   
-  <artifactId>one-3.0-StratusLab-tar</artifactId>  
+  <artifactId>one-3.2-StratusLab-tar</artifactId>  
   <name>OpenNebula (TAR)</name>
 
   <packaging>pom</packaging>
 
   <parent>
     <groupId>eu.stratuslab.pkgs</groupId>
-    <artifactId>one-3.0-StratusLab</artifactId>
+    <artifactId>one-3.2-StratusLab</artifactId>
     <version>1.0.10-SNAPSHOT</version>
   </parent>
 
@@ -36,8 +36,8 @@
 	    </goals>
 	    <configuration>
               <connectionType>connection</connectionType>
-              <connectionUrl>scm:git:git://git.opennebula.org/one-stratuslab.git</connectionUrl>
-	      <scmVersion>one-3.0</scmVersion>
+              <connectionUrl>scm:git:git://github.com/OpenNebula/one.git</connectionUrl>
+	      <scmVersion>one-3.2</scmVersion>
 	      <scmVersionType>tag</scmVersionType>
 	    </configuration>
 	  </execution>

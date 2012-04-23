@@ -49,6 +49,22 @@ set -e
 INSTANCEID=$(basename $(dirname $(dirname $SRC_PATH)))
 CREATE_IMAGE=$(onevm show $INSTANCEID 2>/dev/null | awk '/CREATE_IMAGE/,/\]/' 2>/dev/null)
 
+# Instance migration.
+if [ "x$CREATE_IMAGE" = "x" ]
+then
+  log "No image creation... It's probably a migration."
+  all_disks=$( $SSH -q -t -t $SRC_HOST "source /etc/stratuslab/pdisk-host.cfg; cat $SRC_PATH/../\$REGISTER_FILENAME" )
+  log "Detach all disk from $SRC_HOST"
+  $SSH -q -t -t $SRC_HOST "/usr/sbin/detach-persistent-disk.sh $SRC_PATH/.."
+  for disk_sp in $all_disks
+  do
+    disk=$( echo $disk_sp | sed -e 's/^M//' )
+    log "Attach x${disk}x to $DST_HOST"
+    $SSH -q -t -t $DST_HOST "/usr/sbin/attach-persistent-disk.sh $disk ${DST_PATH}/migration.device"
+  done
+  exit 0
+fi
+
 # Find a way to source this from somewhere.
 PDISKPORT=8445
 export STRATUSLAB_PDISK_ENDPOINT=$(stratus-config persistent_disk_ip)

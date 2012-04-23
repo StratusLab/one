@@ -1,0 +1,25 @@
+diff --git a/src/vm/VirtualMachineTemplate.cc b/src/vm/VirtualMachineTemplate.cc
+index cfac858..64fd50a 100644
+--- a/src/vm/VirtualMachineTemplate.cc
++++ b/src/vm/VirtualMachineTemplate.cc
+@@ -21,14 +21,14 @@
+ /* -------------------------------------------------------------------------- */
+ 
+ const string VirtualMachineTemplate::RESTRICTED_ATTRIBUTES[] = {
+-	"CONTEXT/FILES",
+-	"DISK/SOURCE",
+-	"NIC/MAC",
+-	"NIC/VLAN_ID",
+-	"RANK"
++//	"CONTEXT/FILES",
++//	"DISK/SOURCE",
++//	"NIC/MAC",
++	"NIC/VLAN_ID"
++//	"RANK"
+ };
+ 
+-const int VirtualMachineTemplate::RS_ATTRS_LENGTH = 5;
++const int VirtualMachineTemplate::RS_ATTRS_LENGTH = 1;
+ 	
+ /* -------------------------------------------------------------------------- */
+ /* -------------------------------------------------------------------------- */
