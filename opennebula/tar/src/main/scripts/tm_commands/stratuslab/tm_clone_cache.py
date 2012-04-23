@@ -37,13 +37,14 @@ from stratuslab.marketplace.Policy import Policy
 from stratuslab.CloudConnectorFactory import CloudConnectorFactory
 from stratuslab.commandbase.StorageCommand import PDiskEndpoint
 from stratuslab.marketplace.ManifestDownloader import ManifestDownloader
+import stratuslab.ManifestInfo as ManifestInfo
 
 class TMCloneCache(object):
     ''' Clone or retrieve from cache disk image
     '''
 
     # Debug option
-    PRINT_TRACE_ON_ERROR = False
+    PRINT_TRACE_ON_ERROR = True
 
     # Position of the provided args
     _ARG_SRC_POS = 1
@@ -194,9 +195,12 @@ class TMCloneCache(object):
         return compression
     
     def _retrieveDowloadedImageSize(self):
-        qemuImgInfo =self._sshPDisk(['qemu-img', 'info', self.downloadedLocalImageLocation], 
-                                     'Unable to get qemu image info')
-        self.downloadedLocalImageSize = self._bytesToGiga(self._getVirtualSizeBytesFromQemu(qemuImgInfo))
+        imageFormat = self._getImageFormat()   
+        
+        if imageFormat in ManifestInfo.imageFormats:
+            self.downloadedLocalImageSize = self._bytesToGiga(int(self._getImageSize()))
+        else:
+            raise ValueError('Unknown image format: ' + imageFormat)
         
     def _checkDownloadedImageChecksum(self):
         manifestChecksum = self.manifestDownloader.getImageElementValue(self._CHECKSUM)
@@ -207,7 +211,7 @@ class TMCloneCache(object):
             raise ValueError('Invalid image checksum, is %s got %s' % (manifestChecksum, computedChecksum))
         
     def _copyDownloadedImageToPartition(self):
-        imageFormat = self.manifestDownloader.getImageElementValue('format')
+        imageFormat = self._getImageFormat()
         copyCmd = []
         copyDst = '%s/%s' % (self.pdiskLVMDevice, self.pdiskImageId)
         if imageFormat.startswith('qcow'):
@@ -215,7 +219,13 @@ class TMCloneCache(object):
         else:
             copyCmd = ['dd', 'if=%s' % self.downloadedLocalImageLocation, 'of=%s' % copyDst, 'bs=2048']
         self._sshPDisk(copyCmd, 'Unable to copy image')
+
+    def _getImageFormat(self):
+        return self.manifestDownloader.getImageElementValue('format')
         
+    def _getImageSize(self):
+        return self.manifestDownloader.getImageElementValue('bytes')
+
     def _deleteDownloadedImage(self):
         self._sshPDisk(['rm', '-f', self.downloadedLocalImageLocation], 
                      'Unable to remove temporary image', True)
@@ -318,6 +328,7 @@ class TMCloneCache(object):
                                    self.pdiskSnapshotId)
         
     def _deletePDiskSnapshot(self, *args, **kwargs):
+        return
         if self.pdiskSnapshotId is None:
             return
         try:
@@ -380,10 +391,10 @@ class TMCloneCache(object):
             raise ValueError(errorMsg)
     
     def _bytesToGiga(self, bytesAmout):
-        # Return at least 1GB
-        return bytesAmout / 1024**3 or 1
+        return (bytesAmout / 1024**3) + 1
     
     def _sshDst(self, cmd, errorMsg, dontRaiseOnError=False):
+        print 'in _sshDst', cmd
         retCode, output = sshCmdWithOutput(' '.join(cmd), self.diskDstHost, user=getuser(),
                                            sshKey=sshPublicKeyLocation.replace('.pub', ''))
         if not dontRaiseOnError and retCode != 0:
@@ -391,8 +402,9 @@ class TMCloneCache(object):
         return output
         
     def _sshPDisk(self, cmd, errorMsg, dontRaiseOnError=False):
-        retCode, output = sshCmdWithOutput(' '.join(cmd), self.persistentDiskIp, user=getuser(),
-                                           sshKey=persistentDiskPrivateKey.replace('.pub', ''))
+        print 'in _sshPdisk', cmd
+        retCode, output = sshCmdWithOutput(' '.join(cmd), self.pdisk.persistentDiskIp, user=getuser(),
+                                           sshKey=self.pdisk.persistentDiskPrivateKey.replace('.pub', ''))
         if not dontRaiseOnError and retCode != 0:
             raise Exception('%s\n: Error: %s' % (errorMsg, output))
         return output
