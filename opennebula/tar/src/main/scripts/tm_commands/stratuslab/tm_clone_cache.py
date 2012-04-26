@@ -235,7 +235,8 @@ class TMCloneCache(object):
     # -------------------------------------------
     
     def _retrieveMarketplaceInfos(self):
-        if self.diskSrc.startswith('http://'):
+        # Marketplace URLs can start with either http OR https!
+        if self.diskSrc.startswith(('http://', 'https://')):
             self.marketplaceEndpoint = self._getMarketplaceEndpointFromURI()
             self.marketplaceImageId = self._getImageIdFromURI(self.diskSrc)
         else: # Local marketplace
