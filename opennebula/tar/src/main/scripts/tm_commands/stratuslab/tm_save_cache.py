@@ -115,6 +115,7 @@ class TMSaveCache(object):
         self._retrieveSnapshotId()
         self._retrieveOriginImageInfo()
         self._rebaseSnapshot()
+        self._retrieveCreateImageInfo()
         self._generateManifest()
         self._uploadManifest()
         self._sendEmailToUser()
@@ -181,7 +182,6 @@ class TMSaveCache(object):
 
     def _createManifest(self):
         self._retrieveManifestsPath()
-        self.createImageInfo = self._getCreateImageInfo()
         self.pdiskPathNew = self._buildPDiskPath(self.createdPDiskId)
         self._buildCreator()
         self._renameManifest()
@@ -194,8 +194,8 @@ class TMSaveCache(object):
     def _createManifestTempDir(self):
         mkdtemp(prefix='manifest-')
 
-    def _getCreateImageInfo(self):
-        return self.cloud.getCreateImageInfo(self.instanceId)
+    def _retrieveCreateImageInfo(self):
+        self.createImageInfo = self.cloud.getCreateImageInfo(self.instanceId)
 
     def _buildCreator(self):
         creator = Creator(self.originImageId, self._creatorConfigHolder())
@@ -227,7 +227,10 @@ class TMSaveCache(object):
 
     def _uploadManifest(self):
         uploader = Uploader(self.configHolder)
-        uploader.marketplaceEndpoint = self.originMarketPlace
+        marketplace_endpoint = self._getTargetMarketplace()
+        if not marketplace_endpoint:
+            raise Exception('Markeptlace endpoint was not provided.')
+        uploader.marketplaceEndpoint = marketplace_endpoint
         uploader.upload(self.manifestNotSignedPath)
     
     def _retrieveSnapshotId(self):
@@ -239,6 +242,15 @@ class TMSaveCache(object):
         checksumOutput = self._ssh(self.pdiskEndpoint, [self._CHECKSUM_CMD, snapshotPath],
                                    'Unable to compute checksum of "%s"' % snapshotPath)
         return checksumOutput.split(' ')[0]
+
+    def _getTargetMarketplace(self):
+        if self.createImageInfo.get('newImageMarketplace', ''):
+            return self.createImageInfo['newImageMarketplace']
+
+        if self.configHolder.marketplaceEndpointLocal:
+            return self.configHolder.marketplaceEndpointLocal
+
+        return self.originMarketPlace
 
     #--------------------------------------------
     # Utility
