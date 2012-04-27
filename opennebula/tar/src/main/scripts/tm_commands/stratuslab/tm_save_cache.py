@@ -51,7 +51,7 @@ class TMSaveCache(object):
     '''
 
     # Debug option
-    PRINT_TRACE_ON_ERROR = False
+    PRINT_TRACE_ON_ERROR = True
 
     # Position of the provided args
     _ARG_SRC_POS = 1
@@ -91,7 +91,7 @@ class TMSaveCache(object):
         configFile = kwargs.get('config', defaultConfigFile)
         config = ConfigHolder.configFileToDict(configFile)
         options = PDiskEndpoint.options()
-        options.update({'verboseLevel': 0, 'configFile': configFile})
+        options.update({'verboseLevel': 3, 'configFile': configFile})
         self.configHolder = ConfigHolder(options, config)
         self.config = Configurator(self.configHolder)
         self.pdiskEndpoint = self.config.getValue('persistent_disk_ip')
