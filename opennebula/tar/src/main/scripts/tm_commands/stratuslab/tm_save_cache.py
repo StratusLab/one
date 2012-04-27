@@ -45,7 +45,9 @@ from stratuslab.PersistentDisk import PersistentDisk
 from stratuslab.marketplace.Uploader import Uploader
 from stratuslab.CloudConnectorFactory import CloudConnectorFactory
 from stratuslab.commandbase.StorageCommand import PDiskEndpoint
-
+from stratuslab.marketplace.ManifestDownloader import ManifestDownloader
+import stratuslab.Util as Util
+ 
 class TMSaveCache(object):
     ''' Save a running VM image in PDisk
     '''
@@ -82,6 +84,7 @@ class TMSaveCache(object):
         self.manifestNotSignedPath = None
         self.pdiskPath = None
         self.pdiskPathNew = None
+        self.originImageIdUrl = None
         self.originImageId = None
         self.originMarketPlace = None
         self.instanceId = None
@@ -103,7 +106,7 @@ class TMSaveCache(object):
         self.cloud = CloudConnectorFactory.getCloud(credentials)
         self.cloud.setEndpointFromParts('localhost', self.config.onePort)
         
-        ManifestInfo.IMAGE_VALIDITY = self._P12_VALIDITY * 24 * 3600
+        self.IMAGE_VALIDITY = self._P12_VALIDITY * 24 * 3600
         
     def run(self):
         self._checkArgs()
@@ -158,6 +161,7 @@ class TMSaveCache(object):
 
     def _retrieveOriginImageInfo(self):
         vmSource = self.cloud.getVmDiskSource(self.instanceId, 0)
+        self.originImageIdUrl = vmSource
         self.originImageId = vmSource.split('/')[-1]
         self.originMarketPlace = '/'.join(vmSource.split('/')[:-2])
 
@@ -183,8 +187,7 @@ class TMSaveCache(object):
     def _createManifest(self):
         self._retrieveManifestsPath()
         self.pdiskPathNew = self._buildPDiskPath(self.createdPDiskId)
-        self._buildCreator()
-        self._renameManifest()
+        self._buildAndSignManifest()
 
     def _retrieveManifestsPath(self):
         self._createManifestTempDir()
@@ -192,26 +195,37 @@ class TMSaveCache(object):
         self.manifestNotSignedPath = '%s/manifest-not-signed.xml' % self.manifestTempDir
 
     def _createManifestTempDir(self):
-        mkdtemp(prefix='manifest-')
+        self.manifestTempDir = mkdtemp(prefix='manifest-')
 
     def _retrieveCreateImageInfo(self):
         self.createImageInfo = self.cloud.getCreateImageInfo(self.instanceId)
 
-    def _buildCreator(self):
-        creator = Creator(self.originImageId, self._creatorConfigHolder())
-        creator._retrieveManifest()
-        creator.checksums['sha1']['sum'] = self.imageSha1
-        creator.author = self.createImageInfo['creatorName']
-        creator.newImageGroupVersion = self.createImageInfo['newImageVersion']
-        creator.comment = self.createImageInfo['newImageComment']
-        creator.manifestObject = creator._updateManifest()
-        creator.manifestObject.locations = [self.pdiskPathNew, ]
-        creator.manifest = creator.manifestObject.tostring()
-        creator._saveManifest()
-        move(creator.manifestLocalFileName, self.manifestPath)
-        creator.manifestLocalFileName = self.manifestPath
-        creator._signManifest()
-        
+    def _buildAndSignManifest(self):
+        self._buildAndSaveManifest()
+        self._signManifest()
+
+    def _buildAndSaveManifest(self):
+
+        manifest_info = ManifestDownloader(self.configHolder).getManifestInfo(self.originImageIdUrl)
+
+        manifest_info.sha1 = self.imageSha1
+        manifest_info.creator = self.createImageInfo['creatorName']
+        manifest_info.version = self.createImageInfo['newImageVersion'] or Util.incrementMinorVersionNumber(manifest_info.version)
+        manifest_info.comment = self.createImageInfo['newImageComment']
+        manifest_info.locations = [self.pdiskPathNew]
+        manifest_info.IMAGE_VALIDITY = self.IMAGE_VALIDITY
+
+        manifest_info.buildAndSave(self.manifestNotSignedPath)
+
+    def _signManifest(self):
+
+        self.configHolder.set('outputManifestFile', self.manifestPath)
+
+        signator = Signator(self.manifestNotSignedPath, self.configHolder)
+        rc = signator.sign()
+        if rc != 0:
+            Util.printError("Error signing metadata.")
+
     def _creatorConfigHolder(self):
         configHolder = ConfigHolder()
         configHolder.username='foo'
@@ -222,16 +236,13 @@ class TMSaveCache(object):
         configHolder.p12Password = self.p12pswd
         return configHolder
 
-    def _renameManifest(self):
-        copy('%s.orig' % self.manifestPath, self.manifestNotSignedPath)
-
     def _uploadManifest(self):
         uploader = Uploader(self.configHolder)
         marketplace_endpoint = self._getTargetMarketplace()
         if not marketplace_endpoint:
             raise Exception('Markeptlace endpoint was not provided.')
         uploader.marketplaceEndpoint = marketplace_endpoint
-        uploader.upload(self.manifestNotSignedPath)
+        uploader.upload(self.manifestPath)
     
     def _retrieveSnapshotId(self):
         self.imageSha1 = self._getSnaptshotSha1()
