@@ -75,9 +75,9 @@ class TMSaveCache(object):
         self.pdiskHostPort = None
         self.snapshotId = None
         self.createdPDiskId = None
-        self.p12cert = None
+        self.p12cert = ''
         self.p12pswd = None
-        self.manifestTempDir = None
+        self.manifestTempDir = ''
         self.manifestPath = None
         self.manifestNotSignedPath = None
         self.pdiskPath = None
