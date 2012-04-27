@@ -319,12 +319,14 @@ class TMSaveCache(object):
     def _generateP12Cert(self):
         self.p12cert = mkstemp('.p12', 'cert-')[1]
         self.p12pswd = self._randomString()
-        options = { 'commonName': 'Jane Tester',
-                    'outputFile': self.p12cert,
-                    'certPassword': self.p12pswd,
-                    'certValidity': self._P12_VALIDITY,
-                    'subjectEmail': 'jane.tester@example.org'}
-        CertGenerator(options).generateP12()
+        configHolder = self.configHolder.copy()
+        configHolder.set('commonName', 'Jane Tester')
+        configHolder.set('outputFile', self.p12cert)
+        configHolder.set('certPassword', self.p12pswd)
+        configHolder.set('certValidity', self._P12_VALIDITY)
+        configHolder.set('subjectEmail', 'jane.tester@example.org')
+        configHolder.set('noCleanup', False)
+        CertGenerator(configHolder).generateP12()
 
     def _removeTempFilesAndDirs(self):
         if isdir(self.manifestTempDir):
