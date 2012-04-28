@@ -109,6 +109,12 @@ class TMSaveCache(object):
         self.IMAGE_VALIDITY = self._P12_VALIDITY * 24 * 3600
         
     def run(self):
+        try:
+            self._run()
+        finally:
+            self._cleanup()
+
+    def _run(self):
         self._checkArgs()
         self._parseArgs()
         self._retrieveInstanceId()
@@ -175,14 +181,12 @@ class TMSaveCache(object):
     #--------------------------------------------
 
     def _generateManifest(self):
-        self._startCriticalSection(self._removeTempFilesAndDirs)
         try:
             self._generateP12Cert()
             self._createManifest()
         except:
             self._removeTempFilesAndDirs()
-            raise Exception('Unable to generate manifest')
-        self._endCriticalSection()
+            raise
 
     def _createManifest(self):
         self._retrieveManifestsPath()
@@ -339,17 +343,14 @@ class TMSaveCache(object):
         configHolder.set('noCleanup', False)
         CertGenerator(configHolder).generateP12()
 
+    def _cleanup(self):
+        self._removeTempFilesAndDirs()
+
     def _removeTempFilesAndDirs(self):
         if isdir(self.manifestTempDir):
             removedirs(self.manifestTempDir)
         if isfile(self.p12cert):
             remove(self.p12cert)
-
-    def _startCriticalSection(self, callFunc):
-        self.defaultSignalHandler = signal(SIGINT, callFunc)
-
-    def _endCriticalSection(self):
-        signal(SIGINT, self.defaultSignalHandler)
 
     def _sendEmailToUser(self):
         if not self.createImageInfo['creatorEmail']:
