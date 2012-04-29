@@ -196,7 +196,7 @@ class TMSaveCache(object):
 
     def _createManifest(self):
         self._retrieveManifestsPath()
-        self.pdiskPathNew = self._buildPDiskPath()
+        self.pdiskPathNew = self._buildPDiskPath(self.createdPDiskId)
         self._buildAndSignManifest()
 
     def _retrieveManifestsPath(self):
@@ -270,8 +270,8 @@ class TMSaveCache(object):
     # Utility
     #--------------------------------------------
 
-    def _buildPDiskPath(self):
-        return ':'.join(self.pdiskPath.split(':')[:-1])
+    def _buildPDiskPath(self, imageId):
+        return ':'.join(self.pdiskPath.split(':')[:-1] + [imageId,])
 
     def _assertLength(self, elem, size):
         if len(elem) != size:
