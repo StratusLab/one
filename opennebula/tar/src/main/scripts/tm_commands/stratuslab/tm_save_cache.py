@@ -19,27 +19,24 @@
 # limitations under the License.
 #
 import sys
-
-sys.path.append('/var/lib/stratuslab/python')
-
-from os import removedirs, remove
+import os
+import shutil
 from string import ascii_uppercase, digits
 from random import choice
-from shutil import move, copy
-from signal import signal, SIGINT
 from os.path import basename, dirname
-from os.path import isfile, isdir
 from getpass import getuser
 from smtplib import SMTP
 from tempfile import mkstemp, mkdtemp
 from email.mime.text import MIMEText
+
+sys.path.append('/var/lib/stratuslab/python')
+
+from stratuslab.Signator import Signator
 from stratuslab.Util import defaultConfigFile, sshCmdWithOutput
 from stratuslab.Authn import LocalhostCredentialsConnector
-from stratuslab.Creator import Creator
 from stratuslab.Defaults import sshPublicKeyLocation
 from stratuslab.ConfigHolder import ConfigHolder
-from stratuslab.Configurator import Configurator
-from stratuslab.ManifestInfo import ManifestIdentifier, ManifestInfo
+from stratuslab.ManifestInfo import ManifestIdentifier
 from stratuslab.CertGenerator import CertGenerator
 from stratuslab.PersistentDisk import PersistentDisk
 from stratuslab.marketplace.Uploader import Uploader
@@ -61,6 +58,8 @@ class TMSaveCache(object):
 
     _PDISK_PORT = 8445
     _P12_VALIDITY = 2
+
+    _IMAGE_VALIDITY = _P12_VALIDITY * 24 * 3600
 
     _CHECKSUM = 'sha1'
     _CHECKSUM_CMD = '%ssum' % _CHECKSUM
@@ -90,24 +89,15 @@ class TMSaveCache(object):
         self.instanceId = None
         self.imageSha1 = None
         self.createImageInfo = None
+        self.cloud = None
 
-        configFile = kwargs.get('config', defaultConfigFile)
-        config = ConfigHolder.configFileToDict(configFile)
-        options = PDiskEndpoint.options()
-        options.update({'verboseLevel': 3, 'configFile': configFile})
-        self.configHolder = ConfigHolder(options, config)
-        self.config = Configurator(self.configHolder)
-        self.pdiskEndpoint = self.config.getValue('persistent_disk_ip')
-        self.pdiskLVMDevice = self.config.getValue('persistent_disk_lvm_device')
-        self.pdiskLVMName = basename(self.pdiskLVMDevice)
-        self.configHolder.set('pdiskEndpoint', self.pdiskEndpoint)
+        self.persistentDiskIp = None
+        self.persistentDiskLvmDevice = None
 
-        credentials = LocalhostCredentialsConnector(self.config)
-        self.cloud = CloudConnectorFactory.getCloud(credentials)
-        self.cloud.setEndpointFromParts('localhost', self.config.onePort)
-        
-        self.IMAGE_VALIDITY = self._P12_VALIDITY * 24 * 3600
-        
+        self._initFromConfig(kwargs.get('conf_filename', ''))
+
+        self._initCloudConnector()
+
     def run(self):
         try:
             self._run()
@@ -115,6 +105,9 @@ class TMSaveCache(object):
             self._cleanup()
 
     def _run(self):
+        
+        # TODO: support instance migration
+        
         self._checkArgs()
         self._parseArgs()
         self._retrieveInstanceId()
@@ -128,6 +121,20 @@ class TMSaveCache(object):
         self._generateManifest()
         self._uploadManifest()
         self._sendEmailToUser()
+
+    def _initFromConfig(self, conf_filename=''):
+        config = ConfigHolder.configFileToDictWithFormattedKeys(conf_filename or
+                                                                defaultConfigFile)
+        options = PDiskEndpoint.options()
+        self.configHolder = ConfigHolder(options, config)
+        self.configHolder.set('pdiskEndpoint', self.configHolder.persistentDiskIp)
+        self.configHolder.set('verboseLevel', 3)
+        self.configHolder.assign(self)
+
+    def _initCloudConnector(self):
+        credentials = LocalhostCredentialsConnector(self.configHolder)
+        self.cloud = CloudConnectorFactory.getCloud(credentials)
+        self.cloud.setEndpointFromParts('localhost', self.configHolder.onePort)
 
     def _checkArgs(self):
         if len(self.args) != 3:
@@ -184,13 +191,12 @@ class TMSaveCache(object):
         try:
             self._generateP12Cert()
             self._createManifest()
-        except:
+        finally:
             self._removeTempFilesAndDirs()
-            raise
 
     def _createManifest(self):
         self._retrieveManifestsPath()
-        self.pdiskPathNew = self._buildPDiskPath(self.createdPDiskId)
+        self.pdiskPathNew = self._buildPDiskPath()
         self._buildAndSignManifest()
 
     def _retrieveManifestsPath(self):
@@ -210,35 +216,28 @@ class TMSaveCache(object):
 
     def _buildAndSaveManifest(self):
 
-        manifest_info = ManifestDownloader(self.configHolder).getManifestInfo(self.originImageIdUrl)
+        manifest_downloader = ManifestDownloader(self.configHolder)
+        manifest_info = manifest_downloader.getManifestInfo(self.originImageIdUrl)
 
         manifest_info.sha1 = self.imageSha1
         manifest_info.creator = self.createImageInfo['creatorName']
         manifest_info.version = self.createImageInfo['newImageVersion'] or Util.incrementMinorVersionNumber(manifest_info.version)
         manifest_info.comment = self.createImageInfo['newImageComment']
         manifest_info.locations = [self.pdiskPathNew]
-        manifest_info.IMAGE_VALIDITY = self.IMAGE_VALIDITY
+        manifest_info.IMAGE_VALIDITY = self._IMAGE_VALIDITY
 
         manifest_info.buildAndSave(self.manifestNotSignedPath)
 
     def _signManifest(self):
 
         self.configHolder.set('outputManifestFile', self.manifestPath)
+        self.configHolder.set('p12Certificate', self.p12cert)
+        self.configHolder.set('p12Password', self.p12pswd)
 
         signator = Signator(self.manifestNotSignedPath, self.configHolder)
         rc = signator.sign()
         if rc != 0:
             Util.printError("Error signing metadata.")
-
-    def _creatorConfigHolder(self):
-        configHolder = ConfigHolder()
-        configHolder.username='foo'
-        configHolder.password='bar'
-        configHolder.endpoint='baz'
-        configHolder.verboseLevel = '3'
-        configHolder.p12Certificate = self.p12cert
-        configHolder.p12Password = self.p12pswd
-        return configHolder
 
     def _uploadManifest(self):
         uploader = Uploader(self.configHolder)
@@ -254,7 +253,7 @@ class TMSaveCache(object):
 
     def _getSnaptshotSha1(self):
         snapshotPath = self._getSnapshotPath()
-        checksumOutput = self._ssh(self.pdiskEndpoint, [self._CHECKSUM_CMD, snapshotPath],
+        checksumOutput = self._ssh(self.persistentDiskIp, [self._CHECKSUM_CMD, snapshotPath],
                                    'Unable to compute checksum of "%s"' % snapshotPath)
         return checksumOutput.split(' ')[0]
 
@@ -271,7 +270,7 @@ class TMSaveCache(object):
     # Utility
     #--------------------------------------------
 
-    def _buildPDiskPath(self, imageId):
+    def _buildPDiskPath(self):
         return ':'.join(self.pdiskPath.split(':')[:-1])
 
     def _assertLength(self, elem, size):
@@ -316,7 +315,7 @@ class TMSaveCache(object):
         self.vmDir = dirname(dirname(self.diskSrcPath))
     
     def _getSnapshotPath(self):
-        return '%s/%s' % (self.pdiskLVMDevice, self.diskName)
+        return '%s/%s' % (self.persistentDiskLvmDevice, self.diskName)
 
     def _removeCarriageReturn(self, string):
         return string.replace('\r', '').replace('\n', '')
@@ -347,10 +346,11 @@ class TMSaveCache(object):
         self._removeTempFilesAndDirs()
 
     def _removeTempFilesAndDirs(self):
-        if isdir(self.manifestTempDir):
-            removedirs(self.manifestTempDir)
-        if isfile(self.p12cert):
-            remove(self.p12cert)
+        shutil.rmtree(self.manifestTempDir, ignore_errors=True)
+        try:
+            os.unlink(self.p12cert)
+        except:
+            pass
 
     def _sendEmailToUser(self):
         if not self.createImageInfo['creatorEmail']:
