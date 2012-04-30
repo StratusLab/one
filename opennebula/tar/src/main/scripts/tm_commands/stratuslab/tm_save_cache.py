@@ -38,7 +38,6 @@ from stratuslab.Util import defaultConfigFile, sshCmdWithOutput
 from stratuslab.Authn import LocalhostCredentialsConnector
 from stratuslab.Defaults import sshPublicKeyLocation
 from stratuslab.ConfigHolder import ConfigHolder
-from stratuslab.ManifestInfo import ManifestIdentifier
 from stratuslab.CertGenerator import CertGenerator
 from stratuslab.PersistentDisk import PersistentDisk
 from stratuslab.marketplace.Uploader import Uploader
