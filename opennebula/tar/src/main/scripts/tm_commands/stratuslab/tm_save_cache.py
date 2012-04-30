@@ -52,6 +52,7 @@ class TMSaveCache(object):
 
     # Debug option
     PRINT_TRACE_ON_ERROR = True
+    DEFAULT_VERBOSELEVEL = 0
 
     # Position of the provided args
     _ARG_SRC_POS = 1
@@ -129,7 +130,7 @@ class TMSaveCache(object):
         options = PDiskEndpoint.options()
         self.configHolder = ConfigHolder(options, config)
         self.configHolder.set('pdiskEndpoint', self.configHolder.persistentDiskIp)
-        self.configHolder.set('verboseLevel', 3)
+        self.configHolder.set('verboseLevel', self.DEFAULT_VERBOSELEVEL)
         self.configHolder.assign(self)
 
     def _initCloudConnector(self):
