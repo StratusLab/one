@@ -188,11 +188,8 @@ class TMSaveCache(object):
     #--------------------------------------------
 
     def _generateManifest(self):
-        try:
-            self._generateP12Cert()
-            self._createManifest()
-        finally:
-            self._removeTempFilesAndDirs()
+        self._generateP12Cert()
+        self._createManifest()
 
     def _createManifest(self):
         self._retrieveManifestsPath()
