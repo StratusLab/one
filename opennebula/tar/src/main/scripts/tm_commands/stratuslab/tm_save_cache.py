@@ -74,7 +74,7 @@ class TMSaveCache(object):
         self.vmDir = None
         self.diskName = None
         self.pdiskHostPort = None
-        self.snapshotId = None
+        self.snapshotMarketplaceId = None
         self.createdPDiskId = None
         self.p12cert = ''
         self.p12pswd = None
@@ -181,7 +181,7 @@ class TMSaveCache(object):
     def _rebaseSnapshot(self):
         pdisk = PersistentDisk(self.configHolder)
         self.createdPDiskId = pdisk.rebaseVolume(self.diskName)
-        pdisk.updateVolume({self._IDENTIFIER_KEY: self.snapshotId}, self.createdPDiskId)
+        pdisk.updateVolume({self._IDENTIFIER_KEY: self.snapshotMarketplaceId}, self.createdPDiskId)
 
     #--------------------------------------------
     # Marketplace and related
@@ -224,6 +224,8 @@ class TMSaveCache(object):
         manifest_info.IMAGE_VALIDITY = self._IMAGE_VALIDITY
 
         manifest_info.buildAndSave(self.manifestNotSignedPath)
+        
+        self.snapshotMarketplaceId = manifest_info.identifier
 
     def _signManifest(self):
 
@@ -246,7 +248,6 @@ class TMSaveCache(object):
     
     def _retrieveSnapshotId(self):
         self.imageSha1 = self._getSnaptshotSha1()
-        self.snapshotId = ManifestIdentifier().sha1ToIdentifier(self.imageSha1)
 
     def _getSnaptshotSha1(self):
         snapshotPath = self._getSnapshotPath()
@@ -369,7 +370,7 @@ Image creation was successful.
 New image was stored in local PDISK service
 https://%(pdiskHostPort)s/cert/disks/%(pdiskId)s
 https://%(pdiskHostPort)s/pswd/disks/%(pdiskId)s
-Image manifest with ID %(snapshotId)s was signed with dummy certificate and uploaded to %(marketplace)s.
+Image manifest with ID %(snapshotMarketplaceId)s was signed with dummy certificate and uploaded to %(marketplace)s.
 Alternatively, you can sign attached manifest and upload to Marketplace with:
 stratus-sign-metadata <manifest file>
 stratus-upload-metadata <manifest file>
@@ -381,7 +382,7 @@ The validity of the signing certificate is %(p12Validity)s days.
 Cheers.
         """ % {'pdiskHostPort': self.pdiskHostPort,
                'pdiskId': self.createdPDiskId,
-               'snapshotId': self.snapshotId,
+               'snapshotMarketplaceId': self.snapshotMarketplaceId,
                'marketplace': self.originMarketPlace,
                'p12Validity': self._P12_VALIDITY,
                'imageValidity': self._P12_VALIDITY * 24 }
