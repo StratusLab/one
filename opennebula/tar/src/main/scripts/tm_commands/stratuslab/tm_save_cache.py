@@ -28,6 +28,8 @@ from getpass import getuser
 from smtplib import SMTP
 from tempfile import mkstemp, mkdtemp
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
 
 sys.path.append('/var/lib/stratuslab/python')
 
@@ -120,7 +122,7 @@ class TMSaveCache(object):
         self._retrieveCreateImageInfo()
         self._generateManifest()
         self._uploadManifest()
-        self._sendEmailToUser()
+        self._notify()
 
     def _initFromConfig(self, conf_filename=''):
         config = ConfigHolder.configFileToDictWithFormattedKeys(conf_filename or
@@ -350,19 +352,42 @@ class TMSaveCache(object):
         except:
             pass
 
+    def _notify(self):
+        self._sendEmailToUser()
+        self._publishMessage()
+
     def _sendEmailToUser(self):
         if not self.createImageInfo['creatorEmail']:
             return
-        msg = MIMEText(self._emailText())
-        msg['Subject'] = 'New image created %smtp' % self.snapshotId
-        msg['From'] = 'noreply@stratuslab.eu'
-        msg['To'] = self.createImageInfo['creatorEmail']
-        msg.attach(self.manifestNotSignedPath)
+        
+        msg = self._composeEmailToUser()
+        self._sendEmail(msg)
+
+    def _sendEmail(self, msg):
         smtp = SMTP('localhost')
         smtp.sendmail('noreply@stratuslab.eu', self.createImageInfo['creatorEmail'],
-                   msg.as_string())
+                      msg.as_string())
         smtp.quit()
-        # TODO: Call msg-publisher if msg_type defined in VM template
+
+    def _publishMessage(self):
+        # TODO: Publish message to a message bus if defined.
+        print "TODO: Publish message to a message bus if defined."
+
+    def _composeEmailToUser(self):
+        msg = MIMEMultipart()
+        msg['Subject'] = 'New image created %s' % self.snapshotMarketplaceId
+        msg['From'] = 'noreply@stratuslab.eu'
+        msg['To'] = self.createImageInfo['creatorEmail']
+        
+        msg.attach(MIMEText(self._emailText()))
+        
+        part = MIMEBase('application', 'octet-stream')
+        part.set_payload(open(self.manifestNotSignedPath,'rb').read())
+        part.add_header('Content-Disposition', 
+                        'attachment; filename="manifest-not-signed.xml"')
+        msg.attach(part)
+        
+        return msg
 
     def _emailText(self):
         return """

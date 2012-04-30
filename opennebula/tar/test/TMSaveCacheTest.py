@@ -140,6 +140,8 @@ one_port = 2633
             assert minfo.version == '0.0'
             assert minfo.sha1 == tm.imageSha1
             assert minfo.locations == [PDISK_ENDPOINT+':foo-bar-baz']
+
+            self.failUnless('New image created' in str(tm._composeEmailToUser()))
         finally:
             tm._cleanup()
 
