@@ -77,6 +77,7 @@ class TMSaveCache(object):
         self.diskName = None
         self.pdiskHostPort = None
         self.snapshotMarketplaceId = None
+        self.targetMarketplace = None
         self.createdPDiskId = None
         self.p12cert = ''
         self.p12pswd = None
@@ -121,8 +122,12 @@ class TMSaveCache(object):
         self._rebaseSnapshot()
         self._retrieveCreateImageInfo()
         self._generateManifest()
+        self._retreiveTargetMarketplace()
         self._uploadManifest()
         self._notify()
+
+        # for testability
+        self._emitNewImageInfo()
 
     def _initFromConfig(self, conf_filename=''):
         config = ConfigHolder.configFileToDictWithFormattedKeys(conf_filename or
@@ -242,10 +247,7 @@ class TMSaveCache(object):
 
     def _uploadManifest(self):
         uploader = Uploader(self.configHolder)
-        marketplace_endpoint = self._getTargetMarketplace()
-        if not marketplace_endpoint:
-            raise Exception('Markeptlace endpoint was not provided.')
-        uploader.marketplaceEndpoint = marketplace_endpoint
+        uploader.marketplaceEndpoint = self.targetMarketplace
         uploader.upload(self.manifestPath)
     
     def _retrieveSnapshotId(self):
@@ -257,14 +259,16 @@ class TMSaveCache(object):
                                    'Unable to compute checksum of "%s"' % snapshotPath)
         return checksumOutput.split(' ')[0]
 
-    def _getTargetMarketplace(self):
-        if self.createImageInfo.get('newImageMarketplace', ''):
-            return self.createImageInfo['newImageMarketplace']
-
-        if self.configHolder.marketplaceEndpointLocal:
-            return self.configHolder.marketplaceEndpointLocal
-
-        return self.originMarketPlace
+    def _retreiveTargetMarketplace(self):
+        if self.createImageInfo.get('newImageMarketplace'):
+            self.targetMarketplace = self.createImageInfo['newImageMarketplace']
+        elif self.configHolder.marketplaceEndpointLocal:
+            self.targetMarketplace = self.configHolder.marketplaceEndpointLocal
+        else:
+            self.targetMarketplace = self.originMarketPlace
+    
+        if not self.targetMarketplace:
+            raise Exception('Markeptlace endpoint was not provided.')
 
     #--------------------------------------------
     # Utility
@@ -408,9 +412,16 @@ Cheers.
         """ % {'pdiskHostPort': self.pdiskHostPort,
                'pdiskId': self.createdPDiskId,
                'snapshotMarketplaceId': self.snapshotMarketplaceId,
-               'marketplace': self.originMarketPlace,
+               'marketplace': self.targetMarketplace,
                'p12Validity': self._P12_VALIDITY,
                'imageValidity': self._P12_VALIDITY * 24 }
+
+    def _emitNewImageInfo(self):
+        """To be able to recover image ID from log file by 
+        image creation test."""
+        print "INFO: %s: MARKETPLACE_AND_IMAGEID %s %s" % (os.path.basename(self.args[0]),
+                                                           self.targetMarketplace,
+                                                           self.snapshotMarketplaceId)
 
 if __name__ == '__main__':
     try:
