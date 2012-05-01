@@ -126,7 +126,7 @@ class TMCloneCache(object):
         self._attachPDisk(self.diskSrc)
             
     def _checkBootDisk(self, diskId, diskType):
-        is_live_machine_disk = diskType in _ACCEPTED_ROOT_DISK_TYPE
+        is_live_machine_disk = diskType in self._ACCEPTED_ROOT_DISK_TYPE
         user_count = self.pdisk.getVolumeUserCount(diskId)
 
         if not is_live_machine_disk:
