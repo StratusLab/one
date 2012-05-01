@@ -122,6 +122,7 @@ class TMSaveCache(object):
         self._rebaseSnapshot()
         self._retrieveCreateImageInfo()
         self._generateManifest()
+        self._updateVolumeIdentifier()
         self._retreiveTargetMarketplace()
         self._uploadManifest()
         self._notify()
@@ -188,7 +189,11 @@ class TMSaveCache(object):
     def _rebaseSnapshot(self):
         pdisk = PersistentDisk(self.configHolder)
         self.createdPDiskId = pdisk.rebaseVolume(self.diskName)
-        pdisk.updateVolume({self._IDENTIFIER_KEY: self.snapshotMarketplaceId}, self.createdPDiskId)
+
+    def _updateVolumeIdentifier(self):
+        pdisk = PersistentDisk(self.configHolder)
+        pdisk.updateVolume({self._IDENTIFIER_KEY: self.snapshotMarketplaceId},
+                           self.createdPDiskId)
 
     #--------------------------------------------
     # Marketplace and related
