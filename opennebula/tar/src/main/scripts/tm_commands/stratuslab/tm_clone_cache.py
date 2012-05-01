@@ -237,7 +237,7 @@ class TMCloneCache(object):
     def _retrieveMarketplaceInfos(self):
         # Marketplace URLs can start with either http OR https!
         if self.diskSrc.startswith(('http://', 'https://')):
-            self.marketplaceEndpoint = self._getMarketplaceEndpointFromURI()
+            self.marketplaceEndpoint = self._getMarketplaceEndpointFromURI(self.diskSrc)
             self.marketplaceImageId = self._getImageIdFromURI(self.diskSrc)
         else: # Local marketplace
             self.marketplaceEndpoint = 'http://localhost'
@@ -248,9 +248,9 @@ class TMCloneCache(object):
             # SunStone adds '<hostname>:' to the image ID
             self.marketplaceImageId = self._getStringPart(self.diskSrc, 1)
         
-    def _getMarketplaceEndpointFromURI(self):
-        uri = urlparse(self.diskSrc)
-        return '%s://%s/' % (uri.scheme, uri.netloc)
+    def _getMarketplaceEndpointFromURI(self, uri):
+        uri_parts = urlparse(uri)
+        return '%s://%s/' % (uri_parts.scheme, uri_parts.netloc)
     
     def _validateMarketplaceImagePolicy(self):
         try:
