@@ -62,6 +62,7 @@ class TMCloneCache(object):
     _ACCEPTED_ROOT_DISK_TYPE = ('MACHINE_IMAGE_LIVE')
         
     _IDENTIFIER_KEY = 'identifier'
+    _COUNT_KEY = 'count'
 
     def __init__(self, args, **kwargs):
         self.args = args
@@ -124,7 +125,12 @@ class TMCloneCache(object):
         
         self._createDestinationDir()
         self._attachPDisk(self.diskSrc)
-            
+        self._incrementVolumeUserCount(diskId)
+
+    def _incrementVolumeUserCount(self, diskId):
+        user_count = self.pdisk.getVolumeUserCount(diskId)
+        self.pdisk.updateVolume({self._COUNT_KEY: str(user_count + 1)}, diskId)
+
     def _checkBootDisk(self, diskId, diskType):
         is_live_machine_disk = diskType in self._ACCEPTED_ROOT_DISK_TYPE
         user_count = self.pdisk.getVolumeUserCount(diskId)
