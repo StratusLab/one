@@ -242,7 +242,7 @@ class TMCloneCache(object):
         else: # Local marketplace
             self.marketplaceEndpoint = 'http://localhost'
             try:
-                self.marketplaceEndpoint = self.config.getValue('marketplace_endpoint')
+                self.marketplaceEndpoint = self.config.getValue('marketplace_endpoint_local')
             except:
                 pass
             # SunStone adds '<hostname>:' to the image ID
