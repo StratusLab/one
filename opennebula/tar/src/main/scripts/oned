@@ -23,7 +23,8 @@ one_user="oneadmin"
 start() {
   # Start the OpenNebula daemon
   echo -n $"Starting OpenNebula (${prog}): "
-  su - ${one_user} -c "${ctrlexe} start" 2>/dev/null 1>&2 && success || failure $"$prog start"
+  # NB! if *_proxy env.vars are required for TMs set them in /etc/one/defaultrc 
+  su - ${one_user} -c "unset http_proxy https_proxy; ${ctrlexe} start" 2>/dev/null 1>&2 && success || failure $"$prog start"
   RETVAL=$?
   echo
   return $RETVAL
