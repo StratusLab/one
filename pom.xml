@@ -45,8 +45,8 @@ package and utilities.
   </ciManagement>
 
   <scm>
-    <connection>scm:git:ssh://apache@code.stratuslab.eu/ext/git/stratuslab-one.pkgs.git</connection>
-    <developerConnection>scm:git:ssh://apache@code.stratuslab.eu/ext/git/stratuslab-one.git</developerConnection>
+    <connection>scm:git:ssh://git@github.com/StratusLab/one.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/StratusLab/one.git</developerConnection>
   </scm>
 
   <properties>
