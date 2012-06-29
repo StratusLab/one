@@ -190,7 +190,7 @@ function start_from_cow_snapshot() {
             exec_and_log "stratus-storage-update $PDISKID $IDENTIFIER_KEY $IMAGEID" \
                  "Failed updating identifier for $PDISKID disk" true
 
-            exec_and_log "stratus-storage-update $PDISKID type MACHINE_IMAGE_ORIGINE" \
+            exec_and_log "stratus-storage-update $PDISKID type MACHINE_IMAGE_ORIGIN" \
                  "Failed setting disk type" true
 
             $SSH -t -t $STRATUSLAB_PDISK_ENDPOINT rm -f $IMAGE_LOCAL || true
