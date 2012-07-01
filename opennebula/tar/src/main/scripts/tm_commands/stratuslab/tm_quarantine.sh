@@ -53,6 +53,49 @@ SRC_HOST=`arg_host $SRC`
 # This appears to do exactly the wrong thing.
 #fix_src_path
 
+detach_one_disk() {
+    local UUID_URL="$1"
+    local VM_ID="$2"
+    
+    local CMD="$SSH $SRC_HOST /usr/sbin/stratus-pdisk-client.py --pdisk-id $UUID_URL --vm-id $VM_ID --register --attach --op down"
+
+    $CMD
+    if [ $? ]; then
+        log "ERROR detaching disk $UUID_URL"
+    fi
+}
+
+detach_all_static_disks() {
+    local VM_DIR="$1"
+    local VM_ID="$2"
+
+    ATTACHED_DISK=$($SSH -q -t -t $SRC_HOST "source /etc/stratuslab/pdisk-host.cfg; cat $VM_DIR/\$REGISTER_FILENAME | sort -u 2>/dev/null")
+
+    # if no pdisk attached, nothing to do
+    [ "x$ATTACHED_DISK" = "x" ] && return
+
+    for DISK_INFO in ${ATTACHED_DISK[*]}; do
+        log "detaching: $DISK_INFO from $VM_ID"
+        detach_one_disk $DISK_INFO $VM_ID
+    done
+}
+
+detach_all_dynamic_disks() {
+    local VM_DIR="$1"
+    local VM_ID="$2"
+
+    ATTACHED_DISK=$($SSH -q -t -t $SRC_HOST "source /etc/stratuslab/pdisk-host.cfg; ls -1 $VM_DIR/images/pdisk:* 2>/dev/null")
+
+    # if no pdisk attached, nothing to do
+    [ "x$ATTACHED_DISK" = "x" ] && return
+
+    for DISK_INFO in ${ATTACHED_DISK[*]}; do
+        log "detaching: $DISK_INFO from $VM_ID"
+        detach_one_disk $DISK_INFO $VM_ID
+    done
+}
+
+
 # Locate the quarantine directory.  Currently relative paths
 # are use to locate this.  Essentially: $SRC_PATH/../../quarantine.
 QUARANTINE_DIR=`dirname $SRC_PATH`
@@ -62,24 +105,33 @@ QUARANTINE_DIR=$QUARANTINE_DIR/quarantine
 # Original directory with VM files.  Essentially: $SRC_PATH/../.
 SRC_DIR=`dirname $SRC_PATH`
 
-# Detach persistent disk
-$SSH $SRC_HOST /usr/sbin/detach-persistent-disk.sh $SRC_DIR
-
-# Recover PDISK ID of disk.0 assuming SRC_PATH is in a form /path/ID/images/disk.X
+# Get VM_DIR assuming SRC_PATH is in a form /path/ID/images/
 VM_DIR=$(dirname $SRC_PATH)
+
+# Get the VM ID from the VM directory.
+VM_ID=`basename $VM_DIR`
+
+# Detach all of the disks listed in the registry for the VM.  These
+# are only those that are mounted statically when the machine is launched.
+detach_all_static_disks($VM_DIR, $VM_ID)
+
+# Detach all of the disks that were attached dynamically and remain
+# attached.
+detach_all_dynamic_disks($VM_DIR, $VM_ID)
+
+# Recover PDISK ID of disk.0 from the registry file (assume it is the first entry)
 PDISK_INFO=$($SSH -q -t -t $SRC_HOST "source /etc/stratuslab/pdisk-host.cfg; head -1 $VM_DIR/\$REGISTER_FILENAME")
 # SSH adds carriage return
 PDISK_INFO=$(echo $PDISK_INFO|tr -d '\r')
 PDISKID_DISK0=${PDISK_INFO##*:}
 export STRATUSLAB_PDISK_ENDPOINT=$(stratus-config persistent_disk_ip)
 
-# TODO: stratus-storage-quarantine changes ownership of disks to 'pdisk'.
-#       We don't want privately owned disks to change their ownership.
-#       Find a better way to do this.
-COW_FALSE=$(stratus-storage-search iscow false)
-READONLY_FALSE=$(stratus-storage-search isreadonly false)
-if ( echo $COW_FALSE | grep -q $PDISKID_DISK0 ) && ( echo $READONLY_FALSE | grep -q $PDISKID_DISK0 ); then
-    log "Skipping quarantine in PDISK server for privately owned disk $PDISKID_DISK0"
+# Only quarantine disks that are snapshots.  Others were created directly by user
+# and should not be quarantined or have their owner changed.
+SNAPSHOT_ID=`stratus-storage-get $PDISKID_DISK0 identifier | grep snapshot`
+
+if [ "x$SNAPSHOT_ID" = "x" ] ; then
+    log "Skipping quarantine for disk $PDISKID_DISK0"
 else
     # Update the storage service
     log "Setting persistent disk for quarantine $SRC_PATH"
