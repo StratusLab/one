@@ -113,11 +113,11 @@ VM_ID=`basename $VM_DIR`
 
 # Detach all of the disks listed in the registry for the VM.  These
 # are only those that are mounted statically when the machine is launched.
-detach_all_static_disks($VM_DIR, $VM_ID)
+detach_all_static_disks $VM_DIR  $VM_ID
 
 # Detach all of the disks that were attached dynamically and remain
 # attached.
-detach_all_dynamic_disks($VM_DIR, $VM_ID)
+detach_all_dynamic_disks $VM_DIR $VM_ID
 
 # Recover PDISK ID of disk.0 from the registry file (assume it is the first entry)
 PDISK_INFO=$($SSH -q -t -t $SRC_HOST "source /etc/stratuslab/pdisk-host.cfg; head -1 $VM_DIR/\$REGISTER_FILENAME")
