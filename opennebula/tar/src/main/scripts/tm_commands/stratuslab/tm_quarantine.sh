@@ -50,9 +50,6 @@ get_vmdir
 SRC_PATH=`arg_path $SRC`
 SRC_HOST=`arg_host $SRC`
 
-# This appears to do exactly the wrong thing.
-#fix_src_path
-
 detach_one_disk() {
     local UUID_URL="$1"
     local VM_ID="$2"
@@ -60,7 +57,7 @@ detach_one_disk() {
     local CMD="$SSH $SRC_HOST /usr/sbin/stratus-pdisk-client.py --pdisk-id $UUID_URL --vm-id $VM_ID --register --attach --op down"
 
     $CMD
-    if [ $? ]; then
+    if [ "$?" != "0" ]; then
         log "ERROR detaching disk $UUID_URL"
     fi
 }
@@ -92,6 +89,7 @@ detach_all_dynamic_disks() {
 
     for DISK_INFO in ${ATTACHED_DISK[*]}; do
         DISK_INFO=$(echo $DISK_INFO|tr -d '[:space:]')
+        DISK_INFO=$(basename $DISK_INFO)
         log "detaching: $DISK_INFO from $VM_ID"
         detach_one_disk $DISK_INFO $VM_ID
     done
