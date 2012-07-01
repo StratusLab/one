@@ -75,6 +75,7 @@ detach_all_static_disks() {
     [ "x$ATTACHED_DISK" = "x" ] && return
 
     for DISK_INFO in ${ATTACHED_DISK[*]}; do
+        DISK_INFO=$(echo $DISK_INFO|tr -d '[:space:]')
         log "detaching: $DISK_INFO from $VM_ID"
         detach_one_disk $DISK_INFO $VM_ID
     done
@@ -90,11 +91,11 @@ detach_all_dynamic_disks() {
     [ "x$ATTACHED_DISK" = "x" ] && return
 
     for DISK_INFO in ${ATTACHED_DISK[*]}; do
+        DISK_INFO=$(echo $DISK_INFO|tr -d '[:space:]')
         log "detaching: $DISK_INFO from $VM_ID"
         detach_one_disk $DISK_INFO $VM_ID
     done
 }
-
 
 # Locate the quarantine directory.  Currently relative paths
 # are use to locate this.  Essentially: $SRC_PATH/../../quarantine.
@@ -113,7 +114,7 @@ VM_ID=`basename $VM_DIR`
 
 # Detach all of the disks listed in the registry for the VM.  These
 # are only those that are mounted statically when the machine is launched.
-detach_all_static_disks $VM_DIR  $VM_ID
+detach_all_static_disks $VM_DIR $VM_ID
 
 # Detach all of the disks that were attached dynamically and remain
 # attached.
