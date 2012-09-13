@@ -2,7 +2,7 @@
 
 CONTEXT_FILE=context.sh
 
-. $CONTEXT_FILE
+. ./$CONTEXT_FILE
 
 mkdir -p /root/.ssh
 echo "$PUBLIC_KEY" > /root/.ssh/authorized_keys
