@@ -1,7 +1,7 @@
 StratusLab OpenNebula Integration
 =================================
 
-[![Build Status](https://secure.travis-ci.org/StratusLab/metadata.png)](https://secure.travis-ci.org/StratusLab/metadata.png)
+[![Build Status](https://secure.travis-ci.org/StratusLab/one.png)](https://secure.travis-ci.org/StratusLab/one.png)
 
 Patches and scripts for the integration of OpenNebula with other
 StatusLab services.
