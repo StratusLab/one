@@ -12,7 +12,7 @@ Cron and logrotate entries for the cleanup of the VM quarantine area.
   <packaging>pom</packaging>
 
   <parent>
-    <groupId>eu.stratuslab.pkgs</groupId>
+    <groupId>eu.stratuslab.vmm</groupId>
     <artifactId>one</artifactId>
     <version>2.3-SNAPSHOT</version>
   </parent>
