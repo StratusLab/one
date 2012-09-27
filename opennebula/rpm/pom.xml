@@ -15,7 +15,7 @@
 
   <dependencies>
     <dependency>
-      <groupId>eu.stratuslab.pkgs</groupId>
+      <groupId>eu.stratuslab.vmm</groupId>
       <artifactId>one-3.2-StratusLab-tar</artifactId>
       <classifier>distribution</classifier>
       <type>tar.gz</type>
