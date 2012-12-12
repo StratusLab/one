@@ -23,6 +23,10 @@ from stratuslab.tm.TMContext import TMContext
 
 if __name__ == '__main__':
     try:
+        context_files = sys.argv
+        context_files.append('/var/share/stratuslab/context/init.sh')
+        context_files.append('/var/share/stratuslab/context/epilog.sh')
+        context_files.append('/var/share/stratuslab/context/prolog.sh')
         tm = TMContext(sys.argv)
         tm.run()
     except Exception, e:
