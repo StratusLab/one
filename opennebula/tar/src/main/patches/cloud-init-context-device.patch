@@ -1,0 +1,45 @@
+diff --git a/src/vmm/LibVirtDriverKVM.cc b/src/vmm/LibVirtDriverKVM.cc
+index 29c1b5e..c9b077d 100644
+--- a/src/vmm/LibVirtDriverKVM.cc
++++ b/src/vmm/LibVirtDriverKVM.cc
+@@ -50,6 +50,7 @@ int LibVirtDriver::deployment_description_kvm(
+ 
+     string  type       = "";
+     string  target     = "";
++    string  method     = "";
+     string  bus        = "";
+     string  ro         = "";
+     string  driver     = "";
+@@ -415,9 +416,32 @@ int LibVirtDriver::deployment_description_kvm(
+         context = dynamic_cast<const VectorAttribute *>(attrs[0]);
+         target  = context->vector_value("TARGET");
+         driver  = context->vector_value("DRIVER");
++        method  = context->vector_value("CONTEXT_METHOD");
+ 
+         if ( !target.empty() )
+         {
++          if ( (!method.empty()) && (method == "cloud-init") )
++          {
++            file << "\t\t<disk type='file' device='disk'>" << endl;
++            file << "\t\t\t<source file='" << vm->get_remote_dir() << "/disk."
++                 << num << "'/>" << endl;
++            file << "\t\t\t<target dev='" << target << "'/>" << endl;
++
++            file << "\t\t\t<driver name='qemu' type='";
++
++            if ( !driver.empty() )
++            {
++                file << driver << "'/>" << endl;
++            }
++            else
++            {
++                file << default_driver << "'/>" << endl;
++            }
++
++            file << "\t\t</disk>" << endl;
++          }
++          else 
++          }
+             file << "\t\t<disk type='file' device='cdrom'>" << endl;
+             file << "\t\t\t<source file='" << vm->get_remote_dir() << "/disk."
+                  << num << "'/>" << endl;
