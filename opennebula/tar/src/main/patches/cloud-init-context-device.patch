@@ -1,5 +1,5 @@
 diff --git a/src/vmm/LibVirtDriverKVM.cc b/src/vmm/LibVirtDriverKVM.cc
-index 29c1b5e..c9b077d 100644
+index 29c1b5e..6f92ce6 100644
 --- a/src/vmm/LibVirtDriverKVM.cc
 +++ b/src/vmm/LibVirtDriverKVM.cc
 @@ -50,6 +50,7 @@ int LibVirtDriver::deployment_description_kvm(
@@ -39,7 +39,15 @@ index 29c1b5e..c9b077d 100644
 +            file << "\t\t</disk>" << endl;
 +          }
 +          else 
-+          }
++          {
              file << "\t\t<disk type='file' device='cdrom'>" << endl;
              file << "\t\t\t<source file='" << vm->get_remote_dir() << "/disk."
                   << num << "'/>" << endl;
+@@ -436,6 +460,7 @@ int LibVirtDriver::deployment_description_kvm(
+             }
+ 
+             file << "\t\t</disk>" << endl;
++          }
+         }
+         else
+         {
