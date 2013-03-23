@@ -1,0 +1,12 @@
+diff --git a/src/scheduler/src/client/Client.cc b/src/scheduler/src/client/Client.cc
+index 72f3f74..012b189 100644
+--- a/src/scheduler/src/client/Client.cc
++++ b/src/scheduler/src/client/Client.cc
+@@ -25,6 +25,7 @@
+ #include <limits.h>
+ #include <string.h>
+ #include <stdlib.h>
++#include <unistd.h>
+ 
+ #include <sstream>
+ 
