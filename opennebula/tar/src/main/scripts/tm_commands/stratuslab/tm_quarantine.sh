@@ -53,12 +53,15 @@ SRC_HOST=`arg_host $SRC`
 detach_one_disk() {
     local UUID_URL="$1"
     local VM_ID="$2"
+
+    local UUID=`echo $UUID_URL | cut -d ':' -f 4`
+    local TURL=`stratus-storage-get $UUID turl`
     
-    local CMD="$SSH $SRC_HOST /usr/sbin/stratus-pdisk-client.py --pdisk-id $UUID_URL --vm-id $VM_ID --register --attach --op down"
+    local CMD="$SSH $SRC_HOST /usr/sbin/stratus-pdisk-client.py --pdisk-id $UUID_URL --turl $TURL --vm-id $VM_ID --register --attach --op down"
 
     $CMD
     if [ "$?" != "0" ]; then
-        log "ERROR detaching disk $UUID_URL"
+        log "ERROR detaching disk $UUID_URL $VM_ID $TURL"
     fi
 }
 
@@ -110,6 +113,13 @@ VM_DIR=$(dirname $SRC_PATH)
 # Get the VM ID from the VM directory.
 VM_ID=`basename $VM_DIR`
 
+# Recover PDISK ID of disk.0 from the registry file (assume it is the first entry)
+PDISK_INFO=$($SSH -q -t -t $SRC_HOST "source /etc/stratuslab/pdisk-host.cfg; head -1 $VM_DIR/\$REGISTER_FILENAME")
+# SSH adds carriage return
+PDISK_INFO=$(echo $PDISK_INFO|tr -d '\r')
+PDISKID_DISK0=${PDISK_INFO##*:}
+export STRATUSLAB_PDISK_ENDPOINT=$(stratus-config persistent_disk_ip)
+
 # Detach all of the disks listed in the registry for the VM.  These
 # are only those that are mounted statically when the machine is launched.
 detach_all_static_disks $VM_DIR $VM_ID
@@ -117,13 +127,6 @@ detach_all_static_disks $VM_DIR $VM_ID
 # Detach all of the disks that were attached dynamically and remain
 # attached.
 detach_all_dynamic_disks $VM_DIR $VM_ID
-
-# Recover PDISK ID of disk.0 from the registry file (assume it is the first entry)
-PDISK_INFO=$($SSH -q -t -t $SRC_HOST "source /etc/stratuslab/pdisk-host.cfg; head -1 $VM_DIR/\$REGISTER_FILENAME")
-# SSH adds carriage return
-PDISK_INFO=$(echo $PDISK_INFO|tr -d '\r')
-PDISKID_DISK0=${PDISK_INFO##*:}
-export STRATUSLAB_PDISK_ENDPOINT=$(stratus-config persistent_disk_ip)
 
 # Only quarantine disks that are snapshots.  Others were created directly by user
 # and should not be quarantined or have their owner changed.
