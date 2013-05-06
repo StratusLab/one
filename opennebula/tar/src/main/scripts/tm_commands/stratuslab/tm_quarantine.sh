@@ -69,7 +69,7 @@ detach_all_static_disks() {
     local VM_DIR="$1"
     local VM_ID="$2"
 
-    ATTACHED_DISK=$($SSH -q -t -t $SRC_HOST "source /etc/stratuslab/pdisk-host.cfg; cat $VM_DIR/\$REGISTER_FILENAME | sort -u 2>/dev/null")
+    ATTACHED_DISK=$($SSH -q -t -t $SRC_HOST "source /etc/stratuslab/pdisk-host.cfg; cat $VM_DIR/\$REGISTER_FILENAME 2>/dev/null | sort -u 2>/dev/null")
 
     # if no pdisk attached, nothing to do
     [ "x$ATTACHED_DISK" = "x" ] && return
