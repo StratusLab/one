@@ -19,7 +19,7 @@
       <artifactId>one-3.2-StratusLab-tar</artifactId>
       <classifier>distribution</classifier>
       <type>tar.gz</type>
-      <version>2.7-SNAPSHOT</version>
+      <version>13.05.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
 
