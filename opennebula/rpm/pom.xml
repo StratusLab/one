@@ -10,7 +10,7 @@
   <parent>
     <groupId>eu.stratuslab.vmm</groupId>
     <artifactId>one-3.2-StratusLab</artifactId>  
-    <version>13.05.0</version>
+    <version>13.05.1-SNAPSHOT</version>
   </parent>
 
   <dependencies>
@@ -19,7 +19,7 @@
       <artifactId>one-3.2-StratusLab-tar</artifactId>
       <classifier>distribution</classifier>
       <type>tar.gz</type>
-      <version>13.05.0</version>
+      <version>13.05.1-SNAPSHOT</version>
     </dependency>
   </dependencies>
 
