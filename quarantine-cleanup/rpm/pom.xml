@@ -126,6 +126,11 @@ for virtual machines.
 	    </mapping>
 
 	  </mappings>
+    <postinstallScriptlet>
+      <script>
+mkdir -p /var/log/one
+      </script>
+    </postinstallScriptlet>
 	</configuration>
       </plugin>
 
