@@ -4,7 +4,7 @@
   
   <groupId>eu.stratuslab.vmm</groupId>
   <artifactId>one</artifactId>  
-  <version>13.10.1-SNAPSHOT</version>
+  <version>13.12.0-SNAPSHOT</version>
   <name>OpenNebula (ROOT POM)</name>
 
   <url>http://hudson.stratuslab.eu/one</url>
@@ -20,7 +20,7 @@ package and utilities.
   <parent>
     <groupId>eu.stratuslab</groupId>
     <artifactId>distribution</artifactId>
-    <version>13.10.0</version>
+    <version>13.12.0-SNAPSHOT</version>
   </parent>
 
   <modules>
