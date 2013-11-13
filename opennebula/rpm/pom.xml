@@ -112,7 +112,10 @@ from the version released directly by the OpenNebula project.
 	  </description>
 	  <preinstallScriptlet>
 	    <script>
-/usr/sbin/groupadd -g 9000 -f cloud
+if ! grep -q ^cloud /etc/group
+then
+  /usr/sbin/groupadd -g 9000 -f cloud
+fi
 if ! grep -q ^oneadmin /etc/passwd
 then
   /usr/sbin/useradd -u 9000 -g cloud -s /bin/bash oneadmin 2&gt;/dev/null
