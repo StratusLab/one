@@ -1,0 +1,30 @@
+diff --git a/src/vmm/LibVirtDriverKVM.cc b/src/vmm/LibVirtDriverKVM.cc
+index 29c1b5e..bde7bff 100644
+--- a/src/vmm/LibVirtDriverKVM.cc
++++ b/src/vmm/LibVirtDriverKVM.cc
+@@ -30,6 +30,7 @@ int LibVirtDriver::deployment_description_kvm(
+     int                         num;
+     vector<const Attribute *>   attrs;
+ 
++    string  uuid;
+     string  vcpu;
+     string  memory;
+ 
+@@ -110,6 +111,17 @@ int LibVirtDriver::deployment_description_kvm(
+     file << "\t<name>one-" << vm->get_oid() << "</name>" << endl;
+ 
+     // ------------------------------------------------------------------------
++    // UUID
++    // ------------------------------------------------------------------------
++
++    vm->get_template_attribute("UUID", uuid);
++
++    if (!uuid.empty())
++    {
++        file << "\t<uuid>" << uuid << "</uuid>" << endl;
++    }
++
++    // ------------------------------------------------------------------------
+     // CPU
+     // ------------------------------------------------------------------------
+ 
