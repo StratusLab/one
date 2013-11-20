@@ -5,7 +5,7 @@ CONTEXT_FILE=/mnt/stratuslab/context.sh
 . $CONTEXT_FILE
 
 mkdir -p /root/.ssh
-echo "$PUBLIC_KEY" > /root/.ssh/authorized_keys
+echo "$PUBLIC_KEY" >> /root/.ssh/authorized_keys
 chmod -R 600 /root/.ssh/
 
 if [ -n "$SCRIPT_EXEC" ]; then
