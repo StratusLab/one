@@ -10,7 +10,7 @@
   <parent>
     <groupId>eu.stratuslab.vmm</groupId>
     <artifactId>quarantine-cleanup</artifactId>
-    <version>13.12.0</version>
+    <version>13.12.1-SNAPSHOT</version>
   </parent>
 
   <dependencies>
