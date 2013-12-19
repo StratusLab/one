@@ -20,7 +20,7 @@ package and utilities.
   <parent>
     <groupId>eu.stratuslab</groupId>
     <artifactId>distribution</artifactId>
-    <version>13.12.0-SNAPSHOT</version>
+    <version>13.12.0</version>
   </parent>
 
   <modules>
