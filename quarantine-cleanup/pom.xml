@@ -14,7 +14,7 @@ Cron and logrotate entries for the cleanup of the VM quarantine area.
   <parent>
     <groupId>eu.stratuslab.vmm</groupId>
     <artifactId>one</artifactId>
-    <version>14.03.0</version>
+    <version>14.03.1-SNAPSHOT</version>
   </parent>
 
   <modules>

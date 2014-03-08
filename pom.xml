@@ -4,7 +4,7 @@
   
   <groupId>eu.stratuslab.vmm</groupId>
   <artifactId>one</artifactId>  
-  <version>14.03.0</version>
+  <version>14.03.1-SNAPSHOT</version>
   <name>OpenNebula (ROOT POM)</name>
 
   <url>http://hudson.stratuslab.eu/one</url>
@@ -36,7 +36,7 @@ package and utilities.
   <scm>
     <connection>scm:git:ssh://git@github.com/StratusLab/one.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/StratusLab/one.git</developerConnection>
-    <tag>one-14.03.0</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <repositories>
