@@ -67,6 +67,9 @@
 	  <packager>StratusLab</packager>
 	  <copyright>Apache2</copyright>
 	  <url>http://stratuslab.eu/</url>
+          <requires>
+            <require>tmpwatch</require>
+          </requires>
 	  <provides>
 	    <provide>quarantine-cleanup</provide>
 	  </provides>
