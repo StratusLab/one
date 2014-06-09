@@ -13,11 +13,6 @@
     <version>14.06.0.RC1-SNAPSHOT</version>
   </parent>
 
-  <properties>
-    <maven.build.timestamp.format>yyyyMMdd.HHmmss</maven.build.timestamp.format>
-    <RELEASE>0.${maven.build.timestamp}.${package.os}</RELEASE>
-  </properties>
-
   <build>
 
     <plugins>
