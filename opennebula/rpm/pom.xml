@@ -138,10 +138,21 @@ fi
 	    </script>
 	  </preinstallScriptlet>
 	  <postinstallScriptlet>
-	    <script>/sbin/ldconfig</script>
+	    <script>
+/sbin/ldconfig
+/sbin/chkconfig --add oned || true
+</script>
 	  </postinstallScriptlet>
+          <preremoveScriptlet>
+            <script>
+/sbin/service oned stop || true
+/sbin/chkconfig --del oned || true
+</script>
+          </preremoveScriptlet>
 	  <postremoveScriptlet>
-	    <script>/sbin/ldconfig</script>
+	    <script>
+/sbin/ldconfig
+</script>
 	  </postremoveScriptlet>
  	  <mappings>
 
